@@ -1,4 +1,4 @@
-const portalData = {
+window.portalData = {
   "title": "Acesso aos arquivos e pastas mais utilizados",
   "categories": [
     {
