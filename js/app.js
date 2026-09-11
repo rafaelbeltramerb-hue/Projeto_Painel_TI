@@ -117,7 +117,7 @@ function resolveUrl(x) {
 function openItem(x) {
   const url = resolveUrl(x);
   if (!url) {
-    toast('Este atalho ainda precisa de uma URL HTTP/HTTPS ou caminho válido. Acesse a Administração para configurá-lo.');
+    toast('Este atalho ainda precisa de uma URL HTTP/HTTPS ou caminho válido.');
     return;
   }
   const idStr = String(x.id);
@@ -245,7 +245,6 @@ async function loadDb() {
   ]);
 
   if (e1 || e2) {
-    toast('Supabase configurado, mas não foi possível carregar os dados. Verifique as permissões.');
     return;
   }
 
@@ -327,8 +326,9 @@ $('#theme').onclick = () => {
   const savedTheme = localStorage.getItem('pti_theme');
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 
-  if (window.portalData) {
-    S.data = processData(window.portalData.categories, window.portalData.links);
+  const localData = window.portalData || (typeof portalData !== 'undefined' ? portalData : null);
+  if (localData) {
+    S.data = processData(localData.categories, localData.links);
   }
 
   await loadDb();
