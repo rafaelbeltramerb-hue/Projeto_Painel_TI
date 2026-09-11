@@ -41,7 +41,7 @@
         </form>
       </section>
 
-      <section id="adminPanel" hidden>
+      <section id="adminPanel" hidden style="display: none;">
         <div class="admin-head">
           <div>
             <span>ADMINISTRAÇÃO</span>
@@ -54,8 +54,18 @@
         <div class="admin-grid">
           <aside class="panel">
             <h2>Categorias</h2>
-            <div id="categoryAdmin"></div>
-            <button id="newCategory" class="secondary">+ Nova categoria</button>
+            <div id="categoryAdmin" class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th style="text-align:right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="categoryTableBody"></tbody>
+              </table>
+            </div>
+            <button id="newCategory" class="secondary" style="margin-top: 1rem; width: 100%;">+ Nova categoria</button>
           </aside>
 
           <section class="panel">
@@ -66,7 +76,20 @@
               </div>
               <input id="adminSearch" placeholder="Pesquisar..." autocomplete="off">
             </div>
-            <div id="adminList"></div>
+            <div id="adminList" class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="linksTableBody"></tbody>
+              </table>
+            </div>
           </section>
         </div>
       </section>
@@ -74,7 +97,7 @@
   </div>
 
   <!-- Modal Editor de Atalho -->
-  <div id="editor" class="modal" hidden>
+  <div id="editor" class="modal" hidden style="display: none;">
     <div class="modal-box">
       <div class="modal-head">
         <div>
@@ -117,7 +140,7 @@
   </div>
 
   <!-- Modal Categoria -->
-  <div id="categoryModal" class="modal" hidden aria-hidden="true">
+  <div id="categoryModal" class="modal" hidden style="display: none;" aria-hidden="true">
     <div class="modal-box small">
       <div class="modal-head">
         <div>
@@ -146,7 +169,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast" hidden></div>
+  <div id="toast" class="toast" hidden style="display: none;"></div>
 
   <script src="js/data.js"></script>
   <script src="js/supabase-config.js"></script>
