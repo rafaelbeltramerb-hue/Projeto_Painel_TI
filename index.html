@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220"><meta name="description" content="Portal TI — Xanxerê">
+<title>Portal TI — Xanxerê</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="shell">
+<header class="top"><div class="brand"><div class="logo">TI</div><div><b>Portal TI</b><small>Xanxerê</small></div></div><nav><button id="theme" class="tool">◐ Tema</button><a class="tool" href="admin.html">⚙ Administração</a></nav></header>
+<main>
+<section class="hero"><div><span>PAINEL DE CONTROLE</span><h1>Acesso aos arquivos e pastas mais utilizados</h1><p>Central de acesso rápido aos documentos, pastas e recursos usados diariamente pela TI.</p></div><div class="hero-actions"><button id="favoritesBtn">★ Favoritos</button><button id="recentBtn">↺ Recentes</button><button id="allBtn">Todos</button></div></section>
+<section class="search"><span>⌕</span><input id="q" placeholder="Pesquisar por documento, assunto, categoria ou palavra-chave..." autocomplete="off"><button id="clear" aria-label="Limpar pesquisa">×</button></section>
+<section class="quick"><div class="heading"><div><span>ACESSO RÁPIDO</span><h2>Mais utilizados</h2></div><small id="quickHint">Favoritos e acessos recentes</small></div><div id="quickGrid" class="grid"></div></section>
+<section><div class="heading"><div><span>FILTROS</span><h2 id="sectionTitle">Todos os atalhos</h2></div><em id="count"></em></div><div id="chips" class="chips"></div><div id="grid" class="grid"></div><div id="empty" class="empty" hidden><strong>Nenhum resultado encontrado</strong><p>Tente outro termo ou limpe os filtros.</p></div></section>
+</main><footer><span>Portal TI — Xanxerê</span><span id="footerInfo">30 atalhos · 11 categorias</span></footer></div>
+<div id="toast" class="toast" hidden></div>
+<script src="js/data.js"></script><script src="js/supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase-client.js"></script><script src="js/app.js"></script>
+</body></html>
