@@ -5,15 +5,44 @@ function saveLocal(){localStorage.setItem('pti_recent',JSON.stringify(S.recent))
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.hidden=true,3500)}
 function getId(x){return x.id}
 function isFav(x){return S.usingDb?S.dbFavorites.has(x.id):S.favorites.includes(x.id)}
-function resolveUrl(x){let u=(x.url||'').trim();if(/^https?:\/\//i.test(u))return u;const cfg=window.PORTAL_CONFIG||{};const maps=cfg.networkShareMappings||{};
-  for(const [from,to] of Object.entries(maps)){if(u.toLowerCase().includes(from.toLowerCase())){let rest=u.slice(u.toLowerCase().indexOf(from.toLowerCase())+from.length).replace(/^[/\\]+/,'').replaceAll('\\','/');return to.replace(/\/$/,'')+'/'+rest;}}
-  if(cfg.internalFilesBaseUrl){let clean=u.replace(/^file:\/\//i,'').replace(/^[/\\]+/,'').replaceAll('\\','/').replace(/^\.\.\//,'');return cfg.internalFilesBaseUrl.replace(/\/$/,'')+'/'+clean;}
-  return null;
+function resolveUrl(x){
+  let u=String(x.url_original || x.url || '').trim();
+  if(!u) return null;
+  if(/^https?:\/\//i.test(u)) return u;
+
+  const cfg=window.PORTAL_CONFIG||{};
+  const root=String(cfg.networkRoot||'').trim().replace(/\/+$/,'');
+
+  // Mantém URLs file:// reais. Para compartilhamento UNC,
+  // converte \\servidor\pasta\arquivo para file://servidor/pasta/arquivo.
+  if(/^file:\/\//i.test(u)){
+    let rest=u.replace(/^file:\/+/i,'');
+    rest=rest.replace(/^\\\\+/, '').replace(/\\/g,'/');
+    return rest ? 'file://'+rest.replace(/^\/+/,'') : u;
+  }
+
+  // Caminho Windows absoluto, como K:\TI\Manual.txt
+  if(/^[A-Za-z]:[\\/]/.test(u)){
+    return 'file:///'+u.replace(/\\/g,'/');
+  }
+
+  // Caminho UNC sem o prefixo file://
+  if(/^\\\\/.test(u)){
+    return 'file://'+u.replace(/^\\\\+/,'').replace(/\\/g,'/');
+  }
+
+  // Caminhos relativos da planilha: resolve a partir da raiz informada.
+  if(root){
+    const path=u.replace(/\\/g,'/').replace(/^\/+/,'');
+    return root+'/'+path;
+  }
+
+  return u;
 }
 function openItem(x){const url=resolveUrl(x);if(!url){toast('Este atalho ainda precisa de uma URL HTTP/HTTPS interna. Acesse Administração para configurá-lo.');return}
   S.recent=[x.id,...S.recent.filter(v=>v!==x.id)].slice(0,8);saveLocal();renderQuick();window.open(url,'_blank','noopener');}
 function filtered(){let a=[...S.data.links];if(S.cat)a=a.filter(x=>x.category===S.cat);if(S.mode==='fav')a=a.filter(isFav);if(S.mode==='recent')a=a.filter(x=>S.recent.includes(x.id)).sort((x,y)=>S.recent.indexOf(x.id)-S.recent.indexOf(y.id));if(S.q){const q=S.q.toLocaleLowerCase('pt-BR');const terms=q.split(/\s+/).filter(Boolean);a=a.filter(x=>terms.every(term=>(x.name+' '+x.category+' '+x.description+' '+x.url).toLocaleLowerCase('pt-BR').includes(term)))}return a}
-function card(x){const f=isFav(x);const type=/^https?:\/\//i.test(x.url)?'WEB':(resolveUrl(x)?'REDE / HTTPS':'REDE / CONFIGURAR');return `<article class="card"><div class="ct"><span class="ico">${icon(x.category)}</span><button class="star ${f?'on':''}" data-f="${esc(x.id)}" title="${f?'Remover favorito':'Adicionar favorito'}">${f?'★':'☆'}</button></div><h3>${esc(x.name)}</h3><p>${esc(x.description||x.category)}</p><div class="cf"><small>${type}</small><button data-o="${esc(x.id)}">Abrir ↗</button></div></article>`}
+function card(x){const f=isFav(x);const raw=x.url_original||x.url||''; const type=/^https?:\/\//i.test(raw)?'WEB':/^file:\/\//i.test(raw)||/^[A-Za-z]:[\\/]/.test(raw)||/^\\\\/.test(raw)?'ARQUIVO / REDE':'INTERNO';return `<article class="card"><div class="ct"><span class="ico">${icon(x.category)}</span><button class="star ${f?'on':''}" data-f="${esc(x.id)}" title="${f?'Remover favorito':'Adicionar favorito'}">${f?'★':'☆'}</button></div><h3>${esc(x.name)}</h3><p>${esc(x.description||x.category)}</p><div class="cf"><small>${type}</small><button data-o="${esc(x.id)}">Abrir ↗</button></div></article>`}
 function renderQuick(){const ids=[...S.favorites,...S.recent.filter(x=>!S.favorites.includes(x))].slice(0,8);const a=ids.map(id=>S.data.links.find(x=>String(x.id)===String(id))).filter(Boolean);$('#quickGrid').innerHTML=a.length?a.map(card).join(''):'<div class="quick-empty">Favorite atalhos ou abra documentos para vê-los aqui.</div>';}
 function render(){const a=filtered();$('#grid').innerHTML=a.map(card).join('');$('#empty').hidden=a.length>0;$('#count').textContent=`${a.length} ${a.length===1?'atalho':'atalhos'}`;$('#sectionTitle').textContent=S.mode==='fav'?'Favoritos':S.mode==='recent'?'Recentes':S.cat||'Todos os atalhos';$('#chips').innerHTML=S.data.categories.map(c=>`<button class="chip ${S.cat===c?'sel':''}" data-c="${esc(c)}">${icon(c)} ${esc(c)}</button>`).join('');renderQuick();}
 async function toggleFavorite(x){if(!S.usingDb){S.favorites=S.favorites.includes(x.id)?S.favorites.filter(v=>v!==x.id):[...S.favorites,x.id];saveLocal();render();return}
