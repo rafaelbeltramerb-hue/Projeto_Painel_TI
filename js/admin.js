@@ -27,50 +27,43 @@ function showAdmin() {
   $('#logout').hidden = false;
 }
 
-async function login() {
-  if (localMode()) {
-    $('#loginMsg').textContent = 'Configure o Supabase em js/supabase-config.js para realizar o login.';
-    return;
-  }
-  const email = $('#email').value.trim();
-  const password = $('#password').value;
-  $('#loginMsg').textContent = 'Autenticando...';
+function refreshLocal() {
+  const localData = window.portalData || (typeof portalData !== 'undefined' ? portalData : null);
+  
+  const savedCats = JSON.parse(localStorage.getItem('pti_local_cats') || 'null');
+  const savedLinks = JSON.parse(localStorage.getItem('pti_local_links') || 'null');
 
-  const { data, error } = await portalSupabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    $('#loginMsg').textContent = error.message;
-    return;
-  }
-  A.user = data.user;
-  await loadAdmin();
-}
-
-async function loadAdmin() {
-  if (!A.user && window.portalSupabase) {
-    const r = await portalSupabase.auth.getUser();
-    A.user = r.data.user;
-  }
-  if (!A.user) {
-    showLogin();
-    return;
+  if (savedCats) {
+    A.categories = savedCats;
+  } else if (localData?.categories) {
+    A.categories = localData.categories.map((c, i) => ({
+      id: String(i + 1),
+      name: typeof c === 'string' ? c : c.name,
+      icon: typeof c === 'object' ? c.icon || '📁' : '📁',
+      description: typeof c === 'object' ? c.description || '' : ''
+    }));
   }
 
-  // Verificar perfil / role
-  const { data: profile, error: pe } = await portalSupabase.from('profiles').select('role').eq('id', A.user.id).single();
-  if (pe || profile?.role !== 'admin') {
-    showLogin();
-    $('#loginMsg').textContent = pe ? 'Usuário autenticado, mas não foi possível verificar as permissões.' : 'Usuário sem permissão de administrador.';
-    await portalSupabase.auth.signOut();
-    return;
+  if (savedLinks) {
+    A.links = savedLinks;
+  } else if (localData?.links) {
+    A.links = localData.links.map(l => ({
+      ...l,
+      category_id: A.categories.find(c => c.name === l.category)?.id || '1',
+      category_name: l.category || 'Sem categoria',
+      url: l.url_original || l.url || ''
+    }));
   }
 
-  showAdmin();
-  $('#sessionInfo').textContent = `Administrador: ${A.user.email}`;
-  await refresh();
+  renderCategories();
+  renderLinks();
 }
 
 async function refresh() {
-  if (localMode()) return;
+  if (localMode()) {
+    refreshLocal();
+    return;
+  }
 
   const [c, l] = await Promise.all([
     portalSupabase.from('categories').select('*').order('sort_order'),
@@ -89,45 +82,54 @@ async function refresh() {
 }
 
 function renderCategories() {
-  $('#categoryAdmin').innerHTML = A.categories.map(c => {
-    const count = A.links.filter(x => String(x.category_id) === String(c.id)).length;
-    return `
-      <div class="admin-cat">
-        <span>${esc(c.icon || '📁')}</span>
-        <div>
-          <b>${esc(c.name)}</b>
-          <small>${count} ${count === 1 ? 'atalho' : 'atalhos'}</small>
-        </div>
-        <div class="admin-cat-actions">
-          <button data-edit-cat="${esc(c.id)}" class="secondary small-btn" title="Editar categoria">✏️</button>
-          <button data-delete-cat="${esc(c.id)}" class="danger small-btn" title="Excluir categoria">🗑️</button>
-        </div>
-      </div>
-    `;
-  }).join('') || '<div class="empty">Nenhuma categoria encontrada.</div>';
+  const tbody = $('#categoryTableBody');
+  if (!tbody) return;
+
+  if (A.categories.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem;">Nenhuma categoria encontrada.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = A.categories.map(c => `
+    <tr>
+      <td><strong>${esc(c.icon || '📁')} ${esc(c.name)}</strong></td>
+      <td>${esc(c.description || '-')}</td>
+      <td><span class="badge ${c.active !== false ? 'success' : 'muted'}">${c.active !== false ? 'Ativa' : 'Inativa'}</span></td>
+      <td style="text-align:right;">
+        <button class="icon-btn" data-edit-cat="${esc(c.id)}" title="Editar Categoria">✏️</button>
+        <button class="icon-btn danger" data-delete-cat="${esc(c.id)}" title="Excluir Categoria">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
 }
 
 function renderLinks() {
-  const q = $('#adminSearch').value.toLocaleLowerCase('pt-BR');
-  const rows = A.links.filter(x => (x.name + ' ' + x.category_name + ' ' + (x.description || '')).toLocaleLowerCase('pt-BR').includes(q));
-  
-  $('#adminCount').textContent = `${rows.length} ${rows.length === 1 ? 'atalho' : 'atalhos'}`;
-  $('#adminList').innerHTML = rows.map(x => `
-    <div class="admin-row">
-      <div class="admin-row-main">
-        <span>${esc(x.category_name)}</span>
-        <b>${esc(x.name)}</b>
-        <small>${esc(x.url)}</small>
-      </div>
-      <div class="admin-row-actions">
-        <button data-edit="${esc(x.id)}" class="secondary">Editar</button>
-        <button data-delete="${esc(x.id)}" class="danger">Excluir</button>
-      </div>
-    </div>
-  `).join('') || '<div class="empty">Nenhum atalho encontrado.</div>';
+  const tbody = $('#linksTableBody');
+  if (!tbody) return;
+
+  if (A.links.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:1.5rem;">Nenhum atalho cadastrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = A.links.map(x => `
+    <tr>
+      <td><strong>${esc(x.name)}</strong></td>
+      <td><span class="badge secondary">${esc(x.category_name)}</span></td>
+      <td><span class="badge outline">${esc(x.link_type || 'internal')}</span></td>
+      <td><span class="badge ${x.active !== false ? 'success' : 'muted'}">${x.active !== false ? 'Ativo' : 'Inativo'}</span></td>
+      <td style="text-align:right;">
+        <button class="icon-btn" data-edit="${esc(x.id)}" title="Editar Atalho">✏️</button>
+        <button class="icon-btn danger" data-delete="${esc(x.id)}" title="Excluir Atalho">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
 }
 
 function openEditor(x = null) {
+  // Garante que o modal de categoria esteja fechado antes de abrir o de atalho
+  closeCategoryModal();
+
   $('#editor').hidden = false;
   $('#editId').value = x?.id || '';
   $('#editorEyebrow').textContent = x ? 'EDITAR ATALHO' : 'NOVO ATALHO';
@@ -139,9 +141,13 @@ function openEditor(x = null) {
   $('#linkActive').checked = x?.active !== false;
   $('#formMsg').textContent = '';
 
-  $('#linkCategory').innerHTML = A.categories.length
-    ? A.categories.map(c => `<option value="${c.id}" ${x?.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')
-    : '<option value="">Crie uma categoria primeiro</option>';
+  if (A.categories.length === 0) {
+    $('#linkCategory').innerHTML = '<option value="">Nenhuma categoria cadastrada</option>';
+  } else {
+    $('#linkCategory').innerHTML = A.categories.map(c => 
+      `<option value="${c.id}" ${String(x?.category_id || x?.category) === String(c.id) || x?.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`
+    ).join('');
+  }
 }
 
 function closeEditor() {
@@ -150,57 +156,10 @@ function closeEditor() {
   $('#formMsg').textContent = '';
 }
 
-async function saveLink(e) {
-  e.preventDefault();
-  const id = $('#editId').value;
-  const catId = $('#linkCategory').value;
-
-  if (!catId) {
-    $('#formMsg').textContent = 'Por favor, selecione ou crie uma categoria antes de salvar.';
-    return;
-  }
-
-  const payload = {
-    name: $('#linkName').value.trim(),
-    category_id: catId,
-    description: $('#linkDescription').value.trim(),
-    url: $('#linkUrl').value.trim(),
-    link_type: $('#linkType').value,
-    active: $('#linkActive').checked
-  };
-
-  let r;
-  if (id) {
-    r = await portalSupabase.from('links').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id);
-  } else {
-    payload.sort_order = A.links.length + 1;
-    r = await portalSupabase.from('links').insert(payload);
-  }
-
-  if (r.error) {
-    $('#formMsg').textContent = r.error.message;
-    return;
-  }
-
-  closeEditor();
-  await refresh();
-  toast(id ? 'Atalho atualizado.' : 'Atalho cadastrado.');
-}
-
-async function deleteLink(id) {
-  const x = A.links.find(v => String(v.id) === String(id));
-  if (!x || !confirm(`Excluir o atalho “${x.name}”?`)) return;
-
-  const { error } = await portalSupabase.from('links').delete().eq('id', id);
-  if (error) {
-    toast(error.message);
-  } else {
-    await refresh();
-    toast('Atalho excluído.');
-  }
-}
-
 function openCategoryModal(c = null) {
+  // Oculta o editor de atalho para evitar sobreposição
+  $('#editor').hidden = true;
+
   $('#categoryModal').hidden = false;
   $('#categoryModalTitle').textContent = c ? 'Editar categoria' : 'Nova categoria';
   $('#editCategoryId').value = c ? c.id : '';
@@ -216,77 +175,126 @@ function closeCategoryModal() {
   $('#categoryMsg').textContent = '';
 }
 
-async function saveCategory(e) {
+async function loadAdmin() {
+  if (localMode()) {
+    showAdmin();
+    $('#sessionInfo').textContent = 'Modo Local (Gerenciamento em memória local)';
+    refreshLocal();
+    return;
+  }
+
+  if (!A.user && window.portalSupabase) {
+    const r = await portalSupabase.auth.getUser();
+    A.user = r.data.user;
+  }
+
+  if (!A.user) {
+    showLogin();
+    return;
+  }
+
+  showAdmin();
+  $('#sessionInfo').textContent = `Administrador: ${A.user.email}`;
+  await refresh();
+}
+
+// Event Listeners
+$('#newLink').onclick = () => openEditor();
+$('#closeEditor').onclick = closeEditor;
+$('#cancelEditor').onclick = closeEditor;
+
+$('#newCategory').onclick = () => openCategoryModal();
+$('#closeCategoryModal').onclick = closeCategoryModal;
+$('#cancelCategoryModal').onclick = closeCategoryModal;
+
+$('#linkForm').onsubmit = async e => {
+  e.preventDefault();
+  const id = $('#editId').value;
+  const payload = {
+    name: $('#linkName').value.trim(),
+    category_id: $('#linkCategory').value,
+    description: $('#linkDescription').value.trim(),
+    url: $('#linkUrl').value.trim(),
+    link_type: $('#linkType').value,
+    active: $('#linkActive').checked
+  };
+
+  if (!payload.name || !payload.url) {
+    $('#formMsg').textContent = 'Preencha os campos obrigatórios (Nome e URL).';
+    return;
+  }
+
+  if (localMode()) {
+    if (id) {
+      const idx = A.links.findIndex(x => String(x.id) === String(id));
+      if (idx !== -1) A.links[idx] = { ...A.links[idx], ...payload };
+    } else {
+      payload.id = String(Date.now());
+      const cat = A.categories.find(c => String(c.id) === String(payload.category_id));
+      payload.category_name = cat ? cat.name : 'Geral';
+      A.links.push(payload);
+    }
+    localStorage.setItem('pti_local_links', JSON.stringify(A.links));
+    closeEditor();
+    refreshLocal();
+    toast('Salvo no navegador (Modo Local).');
+    return;
+  }
+
+  const { error } = id 
+    ? await portalSupabase.from('links').update(payload).eq('id', id)
+    : await portalSupabase.from('links').insert([payload]);
+
+  if (error) {
+    $('#formMsg').textContent = error.message;
+  } else {
+    closeEditor();
+    await refresh();
+    toast('Atalho salvo com sucesso!');
+  }
+};
+
+$('#categoryForm').onsubmit = async e => {
   e.preventDefault();
   const id = $('#editCategoryId').value;
   const payload = {
     name: $('#categoryName').value.trim(),
     description: $('#categoryDescription').value.trim(),
-    icon: $('#categoryIcon').value.trim() || '📁',
-    active: true
+    icon: $('#categoryIcon').value.trim() || '📁'
   };
 
-  let r;
-  if (id) {
-    r = await portalSupabase.from('categories').update(payload).eq('id', id);
-  } else {
-    payload.sort_order = A.categories.length + 1;
-    r = await portalSupabase.from('categories').insert(payload);
-  }
-
-  if (r.error) {
-    $('#categoryMsg').textContent = r.error.message;
+  if (!payload.name) {
+    $('#categoryMsg').textContent = 'O nome da categoria é obrigatório.';
     return;
   }
 
-  closeCategoryModal();
-  await refresh();
-  toast(id ? 'Categoria atualizada.' : 'Categoria criada.');
-}
-
-async function deleteCategory(id) {
-  const c = A.categories.find(v => String(v.id) === String(id));
-  if (!c) return;
-
-  const linkedLinks = A.links.filter(x => String(x.category_id) === String(c.id));
-  if (linkedLinks.length > 0) {
-    toast(`Não é possível excluir "${c.name}": existem ${linkedLinks.length} atalho(s) nesta categoria.`);
+  if (localMode()) {
+    if (id) {
+      const idx = A.categories.findIndex(c => String(c.id) === String(id));
+      if (idx !== -1) A.categories[idx] = { ...A.categories[idx], ...payload };
+    } else {
+      payload.id = String(Date.now());
+      A.categories.push(payload);
+    }
+    localStorage.setItem('pti_local_cats', JSON.stringify(A.categories));
+    closeCategoryModal();
+    refreshLocal();
+    toast('Categoria salva (Modo Local).');
     return;
   }
 
-  if (!confirm(`Deseja excluir a categoria “${c.name}”?`)) return;
+  const { error } = id
+    ? await portalSupabase.from('categories').update(payload).eq('id', id)
+    : await portalSupabase.from('categories').insert([payload]);
 
-  const { error } = await portalSupabase.from('categories').delete().eq('id', id);
   if (error) {
-    toast(error.message);
+    $('#categoryMsg').textContent = error.message;
   } else {
+    closeCategoryModal();
     await refresh();
-    toast('Categoria excluída.');
+    toast('Categoria salva com sucesso!');
   }
-}
-
-$('#loginForm').addEventListener('submit', e => {
-  e.preventDefault();
-  login();
-});
-
-$('#logout').onclick = async () => {
-  if (window.portalSupabase) await portalSupabase.auth.signOut();
-  A.user = null;
-  showLogin();
 };
-
-$('#newLink').onclick = () => openEditor();
-$('#closeEditor').onclick = closeEditor;
-$('#cancelEditor').onclick = closeEditor;
-$('#linkForm').addEventListener('submit', saveLink);
-
-$('#newCategory').onclick = () => openCategoryModal();
-$('#closeCategory').onclick = closeCategoryModal;
-$('#cancelCategory').onclick = closeCategoryModal;
-$('#categoryForm').addEventListener('submit', saveCategory);
-
-$('#adminSearch').addEventListener('input', renderLinks);
 
 document.addEventListener('click', e => {
   const ed = e.target.closest('[data-edit]');
@@ -297,42 +305,59 @@ document.addEventListener('click', e => {
 
   const del = e.target.closest('[data-delete]');
   if (del) {
-    deleteLink(del.dataset.delete);
+    if (confirm('Deseja realmente excluir este atalho?')) {
+      const id = del.dataset.delete;
+      if (localMode()) {
+        A.links = A.links.filter(x => String(x.id) !== String(id));
+        localStorage.setItem('pti_local_links', JSON.stringify(A.links));
+        refreshLocal();
+        toast('Excluído (Modo Local).');
+      }
+    }
     return;
   }
 
   const edCat = e.target.closest('[data-edit-cat]');
   if (edCat) {
-    openCategoryModal(A.categories.find(x => String(x.id) === String(edCat.dataset.editCat)));
-    return;
-  }
-
-  const delCat = e.target.closest('[data-delete-cat]');
-  if (delCat) {
-    deleteCategory(delCat.dataset.deleteCat);
+    openCategoryModal(A.categories.find(c => String(c.id) === String(edCat.dataset.editCat)));
     return;
   }
 });
 
-$('#theme').onclick = () => {
+$('#loginForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (localMode()) {
+    toast('Supabase não configurado. Operando em Modo Local.');
+    loadAdmin();
+    return;
+  }
+  const email = $('#email').value;
+  const password = $('#password').value;
+  const { error } = await portalSupabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    $('#loginMsg').textContent = error.message;
+  } else {
+    await loadAdmin();
+  }
+});
+
+$('#logout')?.addEventListener('click', async () => {
+  if (!localMode() && window.portalSupabase) {
+    await portalSupabase.auth.signOut();
+  }
+  A.user = null;
+  showLogin();
+});
+
+$('#theme')?.addEventListener('click', () => {
   const isDark = document.documentElement.dataset.theme === 'dark';
   const newTheme = isDark ? 'light' : 'dark';
   document.documentElement.dataset.theme = newTheme;
   localStorage.setItem('pti_theme', newTheme);
-};
+});
 
 (async () => {
   const savedTheme = localStorage.getItem('pti_theme');
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-
-  if (localMode()) {
-    showLogin();
-    $('#loginMsg').textContent = 'Configure o Supabase em js/supabase-config.js para habilitar a administração.';
-    return;
-  }
-
-  const r = await portalSupabase.auth.getUser();
-  A.user = r.data.user;
-  if (A.user) await loadAdmin();
-  else showLogin();
+  await loadAdmin();
 })();
