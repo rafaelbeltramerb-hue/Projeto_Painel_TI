@@ -87,39 +87,52 @@ function isFav(x) {
 }
 
 function resolveUrl(x) {
-  let u = String(x.url_original || x.url || '').trim();
+  let u = String(x?.url_original || x?.url || '').trim();
   if (!u) return null;
 
+  // URLs web: mantém exatamente como foram cadastradas.
   if (/^https?:\/\//i.test(u)) return u;
 
-  if (/^[A-Za-z]:[\\/]/.test(u)) {
-    return 'file:///' + u.replace(/\\/g, '/');
-  }
+  // Normaliza caminhos Windows para URI file://.
+  // UNC: \\servidor\compartilhamento\arquivo -> file://servidor/compartilhamento/arquivo
+  const toFileUri = (value) => {
+    let v = String(value || '').trim();
 
-  if (/^\\\\/.test(u)) {
-    return 'file://' + u.replace(/^\\\\+/, '').replace(/\\/g, '/');
-  }
-
-  if (/^file:\/\//i.test(u)) {
-    let rest = u.replace(/^file:\/+/i, '');
-    rest = rest.replace(/^\\\\+/, '').replace(/\\/g, '/');
-    if (/^[A-Za-z]:/.test(rest)) {
-      return 'file:///' + rest;
+    // Remove o prefixo file:// existente, mas preserva o nome do servidor/drive.
+    if (/^file:\/\//i.test(v)) {
+      v = v.replace(/^file:\/+/i, '');
     }
-    return 'file://' + rest.replace(/^\/+/, '');
+
+    // UNC com barras invertidas ou já convertido para barras normais.
+    v = v.replace(/^\\+/, '');
+    v = v.replace(/\\/g, '/');
+
+    // Caminho absoluto de unidade local, ex.: K:\TI\Manual.txt
+    if (/^[A-Za-z]:\//.test(v)) {
+      return 'file:///' + v;
+    }
+
+    // Caminho UNC, ex.: arquivos/ti/G_Xanxere_TI/...
+    return 'file://' + v.replace(/^\/+/, '');
+  };
+
+  if (/^file:\/\//i.test(u) || /^[A-Za-z]:[\\/]/.test(u) || /^\\\\/.test(u)) {
+    return toFileUri(u);
   }
 
+  // Caminhos relativos dos hiperlinks originais: usa a raiz da pasta de rede.
   const cfg = window.PORTAL_CONFIG || {};
   let root = String(cfg.networkRoot || '').trim();
 
   if (root) {
-    root = root.replace(/\\/g, '/');
+    root = toFileUri(root);
     if (!root.endsWith('/')) root += '/';
-    let cleanRel = u.replace(/\\/g, '/');
+
+    // Resolve ../ e ./ sem transformar o caminho de rede em uma URL HTTP.
     try {
-      return new URL(cleanRel, root).href;
+      return new URL(u.replace(/\\/g, '/'), root).href;
     } catch (e) {
-      return root + cleanRel.replace(/^\.\//, '');
+      return root + u.replace(/\\/g, '/').replace(/^\.\//, '');
     }
   }
 
@@ -129,14 +142,26 @@ function resolveUrl(x) {
 function openItem(x) {
   const url = resolveUrl(x);
   if (!url) {
-    toast('Este atalho ainda precisa de uma URL HTTP/HTTPS ou caminho válido.');
+    toast('Este atalho não possui um caminho ou URL válido.');
     return;
   }
+
   const idStr = String(x.id);
   S.recent = [idStr, ...S.recent.filter(v => String(v) !== idStr)].slice(0, 8);
   saveLocal();
   renderQuick();
-  window.open(url, '_blank', 'noopener');
+
+  // Não usamos window.open() para arquivos de rede. O navegador deve receber
+  // uma navegação real iniciada pelo clique do usuário, permitindo ao Windows
+  // tratar file:// e caminhos UNC conforme as políticas do computador.
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 function filtered() {
@@ -180,7 +205,7 @@ function card(x) {
       <p>${esc(x.description || x.category)}</p>
       <div class="cf">
         <small>${type}</small>
-        <button class="open-btn" data-o="${esc(x.id)}">Abrir ↗</button>
+        <a class="open-btn" data-open-item="${esc(x.id)}" href="${esc(resolveUrl(x) || '#')}" target="_blank" rel="noopener">Abrir ↗</a>
       </div>
     </article>
   `;
@@ -313,6 +338,20 @@ document.addEventListener('click', e => {
     e.stopPropagation();
     const x = S.data.links.find(v => String(v.id) === String(f.dataset.f));
     if (x) toggleFavorite(x);
+    return;
+  }
+
+  // O botão Abrir é um <a> real para que a navegação para file:// seja
+  // iniciada diretamente pelo clique do usuário, sem window.open().
+  const openLink = e.target.closest('[data-open-item]');
+  if (openLink) {
+    const x = S.data.links.find(v => String(v.id) === String(openLink.dataset.openItem));
+    if (x) {
+      const idStr = String(x.id);
+      S.recent = [idStr, ...S.recent.filter(v => String(v) !== idStr)].slice(0, 8);
+      saveLocal();
+    }
+    // Não chamar preventDefault: o href deve ser processado pelo navegador.
     return;
   }
 
