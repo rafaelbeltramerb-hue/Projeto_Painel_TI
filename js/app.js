@@ -47,11 +47,19 @@ function processData(cats, links) {
 
   return {
     categories: [...new Set(catNames)],
-    links: (links || []).map(l => ({
-      ...l,
-      category: typeof l.category === 'string' ? l.category : (l.categories?.name || 'Sem categoria'),
-      url_original: l.url_original || l.url || ''
-    }))
+    links: (links || [])
+      .filter(l => l.active !== false)
+      .map(l => {
+        const catName = typeof l.category === 'string' 
+          ? l.category 
+          : (l.category_name || l.categories?.name || 'Sem categoria');
+        
+        return {
+          ...l,
+          category: catName,
+          url_original: l.url_original || l.url || ''
+        };
+      })
   };
 }
 
@@ -65,8 +73,12 @@ function toast(msg) {
   if (!t) return;
   t.textContent = msg;
   t.hidden = false;
+  t.style.display = 'block';
   clearTimeout(window.__toast);
-  window.__toast = setTimeout(() => (t.hidden = true), 3500);
+  window.__toast = setTimeout(() => {
+    t.hidden = true;
+    t.style.display = 'none';
+  }, 3500);
 }
 
 function isFav(x) {
@@ -179,21 +191,32 @@ function renderQuick() {
   const ids = [...favList, ...S.recent.filter(id => !favList.includes(String(id)))].slice(0, 8);
   const a = ids.map(id => S.data.links.find(x => String(x.id) === String(id))).filter(Boolean);
   
-  $('#quickGrid').innerHTML = a.length
-    ? a.map(card).join('')
-    : '<div class="quick-empty">Favorite atalhos ou abra documentos para vê-los aqui.</div>';
+  const qg = $('#quickGrid');
+  if (qg) {
+    qg.innerHTML = a.length
+      ? a.map(card).join('')
+      : '<div class="quick-empty">Favorite atalhos ou abra documentos para vê-los aqui.</div>';
+  }
 }
 
 function render() {
   const a = filtered();
-  $('#grid').innerHTML = a.map(card).join('');
-  $('#empty').hidden = a.length > 0;
-  $('#count').textContent = `${a.length} ${a.length === 1 ? 'atalho' : 'atalhos'}`;
-  $('#sectionTitle').textContent = S.mode === 'fav' ? 'Favoritos' : S.mode === 'recent' ? 'Recentes' : S.cat || 'Todos os atalhos';
+  const grid = $('#grid');
+  const empty = $('#empty');
+  const count = $('#count');
+  const title = $('#sectionTitle');
+  const chips = $('#chips');
+
+  if (grid) grid.innerHTML = a.map(card).join('');
+  if (empty) empty.hidden = a.length > 0;
+  if (count) count.textContent = `${a.length} ${a.length === 1 ? 'atalho' : 'atalhos'}`;
+  if (title) title.textContent = S.mode === 'fav' ? 'Favoritos' : S.mode === 'recent' ? 'Recentes' : S.cat || 'Todos os atalhos';
   
-  $('#chips').innerHTML = S.data.categories
-    .map(c => `<button class="chip ${S.cat === c ? 'sel' : ''}" data-c="${esc(c)}">${getCategoryIcon(c)} ${esc(c)}</button>`)
-    .join('');
+  if (chips) {
+    chips.innerHTML = S.data.categories
+      .map(c => `<button class="chip ${S.cat === c ? 'sel' : ''}" data-c="${esc(c)}">${getCategoryIcon(c)} ${esc(c)}</button>`)
+      .join('');
+  }
     
   renderQuick();
 }
@@ -237,25 +260,51 @@ async function toggleFavorite(x) {
 }
 
 async function loadDb() {
-  if (!window.supabaseReady || !window.portalSupabase) return;
+  if (!window.supabaseReady || !window.portalSupabase) return false;
 
-  const [{ data: cats, error: e1 }, { data: links, error: e2 }] = await Promise.all([
-    portalSupabase.from('categories').select('*').eq('active', true).order('sort_order'),
-    portalSupabase.from('links').select('*, categories(name)').eq('active', true).order('sort_order')
-  ]);
+  try {
+    const [{ data: cats, error: e1 }, { data: links, error: e2 }] = await Promise.all([
+      portalSupabase.from('categories').select('*').eq('active', true).order('sort_order'),
+      portalSupabase.from('links').select('*, categories(name)').eq('active', true).order('sort_order')
+    ]);
 
-  if (e1 || e2) {
-    return;
+    if (e1 || e2 || !cats || !links) {
+      return false;
+    }
+
+    S.data = processData(cats, links);
+    S.usingDb = true;
+
+    const { data: { user } } = await portalSupabase.auth.getUser();
+    if (user) {
+      const { data: f } = await portalSupabase.from('favorites').select('link_id').eq('user_id', user.id);
+      S.dbFavorites = new Set((f || []).map(v => String(v.link_id)));
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function loadLocal() {
+  const savedCats = JSON.parse(localStorage.getItem('pti_local_cats') || 'null');
+  const savedLinks = JSON.parse(localStorage.getItem('pti_local_links') || 'null');
+  const baseData = window.portalData || (typeof portalData !== 'undefined' ? portalData : { categories: [], links: [] });
+
+  let cats = savedCats || baseData.categories || [];
+  let links = savedLinks || baseData.links || [];
+
+  if (savedCats && savedLinks) {
+    links = links.map(l => {
+      if (!l.category && l.category_id) {
+        const foundCat = cats.find(c => String(c.id) === String(l.category_id));
+        if (foundCat) l.category = foundCat.name;
+      }
+      return l;
+    });
   }
 
   S.data = processData(cats, links);
-  S.usingDb = true;
-
-  const { data: { user } } = await portalSupabase.auth.getUser();
-  if (user) {
-    const { data: f } = await portalSupabase.from('favorites').select('link_id').eq('user_id', user.id);
-    S.dbFavorites = new Set((f || []).map(v => String(v.link_id)));
-  }
 }
 
 document.addEventListener('click', e => {
@@ -282,57 +331,58 @@ document.addEventListener('click', e => {
   }
 });
 
-$('#q').addEventListener('input', e => {
+$('#q')?.addEventListener('input', e => {
   S.q = e.target.value;
   S.cat = '';
   S.mode = 'all';
   render();
 });
 
-$('#clear').onclick = () => {
-  $('#q').value = '';
+$('#clear')?.addEventListener('click', () => {
+  if ($('#q')) $('#q').value = '';
   S.q = '';
   render();
-};
+});
 
-$('#favoritesBtn').onclick = () => {
+$('#favoritesBtn')?.addEventListener('click', () => {
   S.mode = 'fav';
   S.cat = '';
   render();
-};
+});
 
-$('#recentBtn').onclick = () => {
+$('#recentBtn')?.addEventListener('click', () => {
   S.mode = 'recent';
   S.cat = '';
   render();
-};
+});
 
-$('#allBtn').onclick = () => {
+$('#allBtn')?.addEventListener('click', () => {
   S.mode = 'all';
   S.cat = '';
-  $('#q').value = '';
+  if ($('#q')) $('#q').value = '';
   S.q = '';
   render();
-};
+});
 
-$('#theme').onclick = () => {
+$('#theme')?.addEventListener('click', () => {
   const isDark = document.documentElement.dataset.theme === 'dark';
   const newTheme = isDark ? 'light' : 'dark';
   document.documentElement.dataset.theme = newTheme;
   localStorage.setItem('pti_theme', newTheme);
-};
+});
 
 (async () => {
   const savedTheme = localStorage.getItem('pti_theme');
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 
-  const localData = window.portalData || (typeof portalData !== 'undefined' ? portalData : null);
-  if (localData) {
-    S.data = processData(localData.categories, localData.links);
-  }
+  loadLocal();
 
   await loadDb();
 
-  $('#footerInfo').textContent = `${S.data.links.length} atalhos · ${S.data.categories.length} categorias${S.usingDb ? ' · Supabase conectado' : ' · Modo local'}`;
+  const footerInfo = $('#footerInfo');
+  if (footerInfo) {
+    footerInfo.textContent = `${S.data.links.length} atalhos · ${S.data.categories.length} categorias${S.usingDb ? ' · Supabase conectado' : ' · Modo local'}`;
+  }
+
   render();
 })();
