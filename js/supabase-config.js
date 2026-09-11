@@ -4,6 +4,6 @@ window.PORTAL_CONFIG = {
 };
 
 window.SUPABASE_CONFIG = {
-  url: '',
-  anonKey: ''
+  url: 'https://xkijypdizvhrvstggltd.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraWp5cGRpenZocnZzdGdnbHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNDA5OTcsImV4cCI6MjEwNDYxNjk5N30.XgKZqVxHpyOqWBesOizyK4Pz0-wdpF_-JrxiE76kiFA'
 };
