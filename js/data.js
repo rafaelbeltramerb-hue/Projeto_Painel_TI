@@ -51,7 +51,7 @@ window.portalData = {
       "id": 1,
       "category": "Telefonia",
       "name": "Levantamento Centrais Telefonicas - Ramais VoIP",
-      "url_original": "file:///\\\\arquivos\\ti\\G_Xanxere_TI\\Documentação\\Manuais\\Central%20Telefonica\\Levantamento%20Centrais%20Telefonicas.xlsx",
+      "url_original": "file:///\\\\arquivos\\ti\\G_Xanxere_TI\\Documentacao\\Manuais\\Central Telefonica\\Levantamento Centrais Telefonicas.xlsx",
       "description": "Levantamento das centrais telefônicas e ramais VoIP."
     },
     {
