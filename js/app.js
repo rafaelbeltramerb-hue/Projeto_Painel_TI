@@ -10,662 +10,442 @@ const S = {
 };
 
 const $ = s => document.querySelector(s);
-
-const esc = x =>
-  String(x ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  }[c]));
+const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c]));
 
 const categoryIconMap = new Map();
 
 function getCategoryIcon(c) {
   if (categoryIconMap.has(c)) return categoryIconMap.get(c);
-
   const fallbacks = {
     'Manuais': '📘',
-    'Redes': '🌐',
-    'Sistemas': '💻',
     'Telefonia': '☎️',
-    'TI - Administrativo': '🗂️',
-    'Documentação': '📄'
+    'Rede': '🌐',
+    'Softwares': '💻',
+    'Administrativo': '📋',
+    'Termos': '📄',
+    'Reconhecimento de curso': '🎓',
+    'Planejamento': '📅',
+    'SENHAS': '🔑',
+    'Datashow': '📽️',
+    'Contratos OBC': '📦'
   };
-
-  const icon = fallbacks[c] || '📁';
-  categoryIconMap.set(c, icon);
-  return icon;
+  return fallbacks[c] || '📁';
 }
 
-/* =========================================================
-   UTILITÁRIOS DE CAMINHO
-   ========================================================= */
-
-function normalizeRawPath(value) {
-  if (!value) return '';
-
-  let path = String(value).trim();
-
-  // Remove aspas que eventualmente tenham vindo do Excel
-  path = path.replace(/^["']|["']$/g, '');
-
-  // Converte barras invertidas duplicadas somente onde necessário,
-  // preservando o UNC inicial.
-  if (path.startsWith('\\\\')) {
-    path = path.replace(/\//g, '\\');
-  }
-
-  return path;
-}
-
-function isHttpUrl(value) {
-  return /^https?:\/\//i.test(String(value || '').trim());
-}
-
-function isFileUrl(value) {
-  return /^file:\/\//i.test(String(value || '').trim());
-}
-
-function isUncPath(value) {
-  return /^\\\\/.test(String(value || '').trim());
-}
-
-function getFileExtension(path) {
-  const clean = String(path || '').split('?')[0].split('#')[0];
-  const file = clean.split(/[\\/]/).pop() || '';
-
-  const index = file.lastIndexOf('.');
-  if (index < 0) return '';
-
-  return file.substring(index + 1).toLowerCase();
-}
-
-/*
- * Converte um caminho UNC ou file:// para o formato que
- * os protocolos do Microsoft Office esperam.
- *
- * IMPORTANTE:
- * Não usa encodeURIComponent() no caminho inteiro.
- * Isso preserva:
- *   espaços
- *   acentos
- *   +
- *   parênteses
- *   subpastas
- * etc.
- */
-function toOfficeFileUrl(value) {
-  let path = normalizeRawPath(value);
-
-  // Caso já venha como file://
-  if (/^file:\/\//i.test(path)) {
-    path = path.replace(/^file:\/\//i, '');
-  }
-
-  // Remove barras extras do início para reconstruir file:// corretamente
-  path = path.replace(/^[/\\]+/, '');
-
-  // Normaliza barras para o formato usado no protocolo
-  path = path.replace(/\\/g, '/');
-
-  return 'file://' + path;
-}
-
-function buildOfficeProtocol(value, protocol) {
-  const fileUrl = toOfficeFileUrl(value);
-  return `${protocol}:ofe|u|${fileUrl}`;
-}
-
-function resolveOriginalPath(x) {
-  /*
-   * IMPORTANTE:
-   * Se o registro já possui um caminho completo, usamos
-   * exatamente esse caminho.
-   *
-   * Não reconstruímos o caminho usando networkRoot.
-   * Isso evita perder subpastas como:
-   *
-   * Documentacao/TI-Administrativo/
-   * Documentacao/Manuais/
-   * Documentacao/Redes/
-   */
-  const candidates = [
-    x?.url,
-    x?.link,
-    x?.href,
-    x?.path,
-    x?.caminho,
-    x?.arquivo
-  ];
-
-  for (const candidate of candidates) {
-    if (candidate !== undefined && candidate !== null) {
-      const value = String(candidate).trim();
-
-      if (value) {
-        return value;
+function processData(cats, links) {
+  const catNames = [];
+  (cats || []).forEach(c => {
+    if (typeof c === 'string') {
+      catNames.push(c);
+    } else if (c && typeof c === 'object') {
+      if (c.name) {
+        catNames.push(c.name);
+        if (c.icon) categoryIconMap.set(c.name, c.icon);
       }
     }
-  }
+  });
 
-  return '';
+  return {
+    categories: [...new Set(catNames)],
+    links: (links || [])
+      .filter(l => l.active !== false)
+      .map(l => {
+        const catName = typeof l.category === 'string' 
+          ? l.category 
+          : (l.category_name || l.categories?.name || 'Sem categoria');
+        
+        return {
+          ...l,
+          category: catName,
+          url_original: l.url_original || l.url || ''
+        };
+      })
+  };
 }
-
-function resolveUrl(x) {
-  const raw = resolveOriginalPath(x);
-
-  if (!raw) return '';
-
-  // Links web continuam funcionando normalmente.
-  if (isHttpUrl(raw)) {
-    return raw;
-  }
-
-  // Caminhos locais/rede são preservados.
-  return normalizeRawPath(raw);
-}
-
-/* =========================================================
-   ABERTURA DOS ARQUIVOS
-   ========================================================= */
-
-function openItem(x) {
-  const raw = resolveUrl(x);
-
-  if (!raw) {
-    toast('Este atalho ainda precisa de um caminho ou URL válido.');
-    return;
-  }
-
-  const idStr = String(x.id);
-
-  S.recent = [
-    idStr,
-    ...S.recent.filter(v => String(v) !== idStr)
-  ].slice(0, 8);
-
-  saveLocal();
-  renderQuick();
-
-  /*
-   * Links HTTP/HTTPS:
-   * comportamento normal do Portal.
-   */
-  if (isHttpUrl(raw)) {
-    window.open(raw, '_blank', 'noopener');
-    return;
-  }
-
-  const ext = getFileExtension(raw);
-
-  /*
-   * Microsoft Excel
-   */
-  if ([
-    'xlsx',
-    'xls',
-    'xlsm',
-    'xlsb',
-    'csv'
-  ].includes(ext)) {
-    const target = buildOfficeProtocol(raw, 'ms-excel');
-
-    triggerExternalProtocol(target);
-    return;
-  }
-
-  /*
-   * Microsoft Word
-   */
-  if ([
-    'docx',
-    'doc',
-    'docm',
-    'rtf'
-  ].includes(ext)) {
-    const target = buildOfficeProtocol(raw, 'ms-word');
-
-    triggerExternalProtocol(target);
-    return;
-  }
-
-  /*
-   * Microsoft PowerPoint
-   */
-  if ([
-    'pptx',
-    'ppt',
-    'pptm',
-    'ppsx',
-    'pps'
-  ].includes(ext)) {
-    const target = buildOfficeProtocol(raw, 'ms-powerpoint');
-
-    triggerExternalProtocol(target);
-    return;
-  }
-
-  /*
-   * PDF e demais arquivos:
-   *
-   * Tentamos abrir o caminho original.
-   * O Chrome pode bloquear file:// quando a origem
-   * for HTTPS, mas não interferimos no restante do Portal.
-   */
-  if (isFileUrl(raw)) {
-    window.open(raw, '_blank', 'noopener');
-    return;
-  }
-
-  if (isUncPath(raw)) {
-    const fileUrl = toOfficeFileUrl(raw);
-    window.open(fileUrl, '_blank', 'noopener');
-    return;
-  }
-
-  /*
-   * Fallback para outros tipos.
-   */
-  window.open(raw, '_blank', 'noopener');
-}
-
-function triggerExternalProtocol(url) {
-  /*
-   * Cria um link real e dispara o clique.
-   * Isso permite que Chrome apresente a confirmação:
-   *
-   * "Deseja abrir o Microsoft Excel?"
-   *
-   * em vez de tentar carregar o recurso como uma página.
-   */
-  const a = document.createElement('a');
-
-  a.href = url;
-  a.target = '_self';
-  a.rel = 'noopener';
-
-  a.style.display = 'none';
-
-  document.body.appendChild(a);
-
-  a.click();
-
-  setTimeout(() => {
-    a.remove();
-  }, 1000);
-}
-
-/* =========================================================
-   ARMAZENAMENTO LOCAL
-   ========================================================= */
 
 function saveLocal() {
   localStorage.setItem('pti_recent', JSON.stringify(S.recent));
   localStorage.setItem('pti_fav', JSON.stringify(S.favorites));
 }
 
-function isFavorite(id) {
-  return S.favorites.some(v => String(v) === String(id));
+function toast(msg) {
+  const t = $('#toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.hidden = false;
+  t.style.display = 'block';
+  clearTimeout(window.__toast);
+  window.__toast = setTimeout(() => {
+    t.hidden = true;
+    t.style.display = 'none';
+  }, 3500);
 }
 
-function toggleFavorite(id) {
-  const value = String(id);
+function isFav(x) {
+  const idStr = String(x.id);
+  return S.usingDb ? S.dbFavorites.has(idStr) : S.favorites.includes(idStr);
+}
 
-  if (isFavorite(value)) {
-    S.favorites = S.favorites.filter(v => String(v) !== value);
-  } else {
-    S.favorites.unshift(value);
+function decodeFilePath(value) {
+  let u = String(value || '').trim();
+  if (!u) return '';
+
+  // Os caminhos dos arquivos não devem permanecer URL-encoded quando
+  // forem enviados aos protocolos do Office (ex.: %20, %C3%A7, %2B).
+  try {
+    u = decodeURIComponent(u);
+  } catch (e) {
+    // Mantém o valor original caso exista algum % inválido.
+  }
+  return u;
+}
+
+function officeProtocolUrl(u) {
+  const clean = decodeFilePath(u);
+  const lower = clean.toLocaleLowerCase('pt-BR');
+
+  let protocol = null;
+  if (/\.(xlsx|xls|xlsm|xlsb|csv)$/i.test(lower)) {
+    protocol = 'ms-excel:ofe|u|';
+  } else if (/\.(docx|doc|docm|rtf)$/i.test(lower)) {
+    protocol = 'ms-word:ofe|u|';
+  } else if (/\.(pptx|ppt|pptm|ppsx|pps)$/i.test(lower)) {
+    protocol = 'ms-powerpoint:ofe|u|';
   }
 
-  saveLocal();
-  renderQuick();
-  render();
+  if (!protocol) return null;
+
+  // O Excel/Word/PowerPoint precisa receber file:// com o caminho
+  // original, sem encodeURIComponent/de URL encoding no caminho.
+  let fileUrl = clean;
+
+  if (/^file:\/\//i.test(fileUrl)) {
+    fileUrl = 'file://' + fileUrl.replace(/^file:\/+/i, '');
+  } else if (/^\\\\/.test(fileUrl)) {
+    fileUrl = 'file://' + fileUrl.replace(/^\\\\+/, '').replace(/\\/g, '/');
+  } else if (/^[A-Za-z]:[\\/]/.test(fileUrl)) {
+    fileUrl = 'file:///' + fileUrl.replace(/\\/g, '/');
+  } else {
+    const cfg = window.PORTAL_CONFIG || {};
+    let root = String(cfg.networkRoot || '').trim();
+    if (root) {
+      root = root.replace(/\\/g, '/');
+      if (!root.endsWith('/')) root += '/';
+      fileUrl = root + fileUrl.replace(/^[\\/]+/, '').replace(/\\/g, '/');
+      if (!/^file:\/\//i.test(fileUrl)) fileUrl = 'file://' + fileUrl.replace(/^file:\/+/i, '');
+    }
+  }
+
+  return protocol + fileUrl;
 }
 
-function toast(message) {
-  const el = document.querySelector('#toast');
+function resolveUrl(x) {
+  let u = String(x.url_original || x.url || '').trim();
+  if (!u) return null;
 
-  if (!el) {
-    console.log(message);
+  if (/^https?:\/\//i.test(u)) return u;
+
+  // Para arquivos do Microsoft Office, usamos os protocolos oficiais do
+  // aplicativo. Isso evita que o Chrome tente carregar file:// como recurso
+  // local de uma página HTTPS.
+  const officeUrl = officeProtocolUrl(u);
+  if (officeUrl) return officeUrl;
+
+  if (/^[A-Za-z]:[\\/]/.test(u)) {
+    return 'file:///' + u.replace(/\\/g, '/');
+  }
+
+  if (/^\\\\/.test(u)) {
+    return 'file://' + u.replace(/^\\\\+/, '').replace(/\\/g, '/');
+  }
+
+  if (/^file:\/\//i.test(u)) {
+    let rest = u.replace(/^file:\/+/i, '');
+    rest = rest.replace(/^\\\\+/, '').replace(/\\/g, '/');
+    if (/^[A-Za-z]:/.test(rest)) {
+      return 'file:///' + rest;
+    }
+    return 'file://' + rest.replace(/^\/+/, '');
+  }
+
+  const cfg = window.PORTAL_CONFIG || {};
+  let root = String(cfg.networkRoot || '').trim();
+
+  if (root) {
+    root = root.replace(/\\/g, '/');
+    if (!root.endsWith('/')) root += '/';
+    let cleanRel = u.replace(/\\/g, '/');
+    try {
+      return new URL(cleanRel, root).href;
+    } catch (e) {
+      return root + cleanRel.replace(/^\.\//, '');
+    }
+  }
+
+  return u;
+}
+
+function openItem(x) {
+  const url = resolveUrl(x);
+  if (!url) {
+    toast('Este atalho ainda precisa de uma URL HTTP/HTTPS ou caminho válido.');
     return;
   }
+  const idStr = String(x.id);
+  S.recent = [idStr, ...S.recent.filter(v => String(v) !== idStr)].slice(0, 8);
+  saveLocal();
+  renderQuick();
 
-  el.textContent = message;
-  el.classList.add('show');
-
-  clearTimeout(el._timer);
-
-  el._timer = setTimeout(() => {
-    el.classList.remove('show');
-  }, 3000);
+  // O clique do usuário já ocorreu no evento do Portal. window.open permite
+  // que o Chrome peça confirmação para abrir o aplicativo Office quando
+  // necessário, como no teste manual com ms-excel:.
+  window.open(url, '_blank', 'noopener');
 }
-
-/* =========================================================
-   DADOS
-   ========================================================= */
-
-function processData(data) {
-  const categories = Array.isArray(data?.categories)
-    ? data.categories
-    : [];
-
-  const links = Array.isArray(data?.links)
-    ? data.links
-    : [];
-
-  S.data.categories = categories;
-  S.data.links = links;
-
-  return S.data;
-}
-
-async function loadDb() {
-  try {
-    /*
-     * Mantém aqui o carregamento original do projeto.
-     * Esta função não deve alterar os caminhos dos atalhos.
-     */
-
-    if (typeof window.loadPortalData === 'function') {
-      const result = await window.loadPortalData();
-
-      processData(result || {});
-
-      S.usingDb = true;
-
-      render();
-      renderQuick();
-
-      return;
-    }
-
-    /*
-     * Caso o projeto já disponibilize os dados através
-     * de outra variável global.
-     */
-    if (window.PORTAL_DATA) {
-      processData(window.PORTAL_DATA);
-
-      S.usingDb = true;
-
-      render();
-      renderQuick();
-
-      return;
-    }
-
-    console.warn('Fonte de dados do Portal não encontrada.');
-
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-    toast('Não foi possível carregar os atalhos.');
-  }
-}
-
-/* =========================================================
-   FILTROS
-   ========================================================= */
 
 function filtered() {
-  let links = [...S.data.links];
-
-  if (S.cat) {
-    links = links.filter(x =>
-      String(x.category || x.categoria || '') === String(S.cat)
-    );
+  let a = [...S.data.links];
+  if (S.cat) a = a.filter(x => x.category === S.cat);
+  if (S.mode === 'fav') a = a.filter(isFav);
+  if (S.mode === 'recent') {
+    a = a
+      .filter(x => S.recent.includes(String(x.id)))
+      .sort((x, y) => S.recent.indexOf(String(x.id)) - S.recent.indexOf(String(y.id)));
   }
-
-  const q = String(S.q || '').trim().toLowerCase();
-
-  if (q) {
-    links = links.filter(x => {
-      const text = [
-        x.name,
-        x.nome,
-        x.title,
-        x.titulo,
-        x.description,
-        x.descricao,
-        x.category,
-        x.categoria
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      return text.includes(q);
+  if (S.q) {
+    const q = S.q.toLocaleLowerCase('pt-BR');
+    const terms = q.split(/\s+/).filter(Boolean);
+    a = a.filter(x => {
+      const searchBlob = `${x.name} ${x.category} ${x.description || ''} ${x.url_original || x.url || ''}`.toLocaleLowerCase('pt-BR');
+      return terms.every(term => searchBlob.includes(term));
     });
   }
-
-  if (S.mode === 'favorites') {
-    links = links.filter(x => isFavorite(x.id));
-  }
-
-  if (S.mode === 'recent') {
-    const order = new Map(
-      S.recent.map((id, index) => [String(id), index])
-    );
-
-    links = links
-      .filter(x => order.has(String(x.id)))
-      .sort(
-        (a, b) =>
-          order.get(String(a.id)) -
-          order.get(String(b.id))
-      );
-  }
-
-  return links;
+  return a;
 }
 
-/* =========================================================
-   RENDERIZAÇÃO
-   ========================================================= */
+function card(x) {
+  const f = isFav(x);
+  const raw = String(x.url_original || x.url || '');
+  const type = /^https?:\/\//i.test(raw)
+    ? 'WEB'
+    : /^file:\/\//i.test(raw) || /^[A-Za-z]:[\\/]/.test(raw) || /^\\\\/.test(raw)
+    ? 'ARQUIVO / REDE'
+    : 'INTERNO';
+
+  return `
+    <article class="card" data-o="${esc(x.id)}">
+      <div class="ct">
+        <span class="ico">${getCategoryIcon(x.category)}</span>
+        <button class="star ${f ? 'on' : ''}" data-f="${esc(x.id)}" title="${f ? 'Remover favorito' : 'Adicionar favorito'}" aria-label="Favorito">
+          ${f ? '★' : '☆'}
+        </button>
+      </div>
+      <h3>${esc(x.name)}</h3>
+      <p>${esc(x.description || x.category)}</p>
+      <div class="cf">
+        <small>${type}</small>
+        <button class="open-btn" data-o="${esc(x.id)}">Abrir ↗</button>
+      </div>
+    </article>
+  `;
+}
 
 function renderQuick() {
-  const container =
-    document.querySelector('#quick') ||
-    document.querySelector('#quickLinks');
-
-  if (!container) return;
-
-  const recent = S.recent
-    .map(id =>
-      S.data.links.find(
-        x => String(x.id) === String(id)
-      )
-    )
-    .filter(Boolean)
-    .slice(0, 8);
-
-  container.innerHTML = recent.map(x => {
-    const name =
-      x.name ||
-      x.nome ||
-      x.title ||
-      x.titulo ||
-      'Atalho';
-
-    return `
-      <button
-        class="quick-item"
-        type="button"
-        data-open-id="${esc(x.id)}"
-      >
-        ${esc(name)}
-      </button>
-    `;
-  }).join('');
-
-  container.querySelectorAll('[data-open-id]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = S.data.links.find(
-        x => String(x.id) === String(btn.dataset.openId)
-      );
-
-      if (item) openItem(item);
-    });
-  });
+  const favList = S.usingDb ? Array.from(S.dbFavorites) : S.favorites;
+  const ids = [...favList, ...S.recent.filter(id => !favList.includes(String(id)))].slice(0, 8);
+  const a = ids.map(id => S.data.links.find(x => String(x.id) === String(id))).filter(Boolean);
+  
+  const qg = $('#quickGrid');
+  if (qg) {
+    qg.innerHTML = a.length
+      ? a.map(card).join('')
+      : '<div class="quick-empty">Favorite atalhos ou abra documentos para vê-los aqui.</div>';
+  }
 }
 
 function render() {
-  const container =
-    document.querySelector('#links') ||
-    document.querySelector('#shortcuts') ||
-    document.querySelector('#cards');
+  const a = filtered();
+  const grid = $('#grid');
+  const empty = $('#empty');
+  const count = $('#count');
+  const title = $('#sectionTitle');
+  const chips = $('#chips');
 
-  if (!container) return;
+  if (grid) grid.innerHTML = a.map(card).join('');
+  if (empty) empty.hidden = a.length > 0;
+  if (count) count.textContent = `${a.length} ${a.length === 1 ? 'atalho' : 'atalhos'}`;
+  if (title) title.textContent = S.mode === 'fav' ? 'Favoritos' : S.mode === 'recent' ? 'Recentes' : S.cat || 'Todos os atalhos';
+  
+  if (chips) {
+    chips.innerHTML = S.data.categories
+      .map(c => `<button class="chip ${S.cat === c ? 'sel' : ''}" data-c="${esc(c)}">${getCategoryIcon(c)} ${esc(c)}</button>`)
+      .join('');
+  }
+    
+  renderQuick();
+}
 
-  const links = filtered();
-
-  if (!links.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        Nenhum atalho encontrado.
-      </div>
-    `;
-
+async function toggleFavorite(x) {
+  const idStr = String(x.id);
+  if (!S.usingDb) {
+    S.favorites = S.favorites.includes(idStr) ? S.favorites.filter(v => v !== idStr) : [...S.favorites, idStr];
+    saveLocal();
+    render();
     return;
   }
 
-  container.innerHTML = links.map(x => {
-    const name =
-      x.name ||
-      x.nome ||
-      x.title ||
-      x.titulo ||
-      'Atalho';
+  if (!window.portalSupabase) {
+    toast('Supabase não inicializado.');
+    return;
+  }
 
-    const description =
-      x.description ||
-      x.descricao ||
-      '';
+  const { data: { user } } = await portalSupabase.auth.getUser();
+  if (!user) {
+    toast('Entre na administração para sincronizar favoritos.');
+    return;
+  }
 
-    const category =
-      x.category ||
-      x.categoria ||
-      '';
-
-    const favorite = isFavorite(x.id);
-
-    return `
-      <article
-        class="shortcut-card"
-        data-id="${esc(x.id)}"
-      >
-        <button
-          class="favorite-btn ${favorite ? 'active' : ''}"
-          type="button"
-          data-favorite-id="${esc(x.id)}"
-          aria-label="Favoritar"
-        >
-          ${favorite ? '★' : '☆'}
-        </button>
-
-        <button
-          class="shortcut-main"
-          type="button"
-          data-open-id="${esc(x.id)}"
-        >
-          <div class="shortcut-icon">
-            ${getCategoryIcon(category)}
-          </div>
-
-          <div class="shortcut-content">
-            <h3>${esc(name)}</h3>
-
-            ${
-              description
-                ? `<p>${esc(description)}</p>`
-                : ''
-            }
-
-            ${
-              category
-                ? `<span class="shortcut-category">${esc(category)}</span>`
-                : ''
-            }
-          </div>
-        </button>
-      </article>
-    `;
-  }).join('');
-
-  container
-    .querySelectorAll('[data-open-id]')
-    .forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = S.data.links.find(
-          x => String(x.id) === String(btn.dataset.openId)
-        );
-
-        if (item) {
-          openItem(item);
-        }
-      });
-    });
-
-  container
-    .querySelectorAll('[data-favorite-id]')
-    .forEach(btn => {
-      btn.addEventListener('click', event => {
-        event.stopPropagation();
-
-        toggleFavorite(btn.dataset.favoriteId);
-      });
-    });
+  if (S.dbFavorites.has(idStr)) {
+    const { error } = await portalSupabase.from('favorites').delete().eq('user_id', user.id).eq('link_id', x.id);
+    if (error) {
+      toast(error.message);
+    } else {
+      S.dbFavorites.delete(idStr);
+    }
+  } else {
+    const { error } = await portalSupabase.from('favorites').insert({ user_id: user.id, link_id: x.id });
+    if (error) {
+      toast(error.message);
+    } else {
+      S.dbFavorites.add(idStr);
+    }
+  }
+  render();
 }
 
-/* =========================================================
-   EVENTOS
-   ========================================================= */
+async function loadDb() {
+  if (!window.supabaseReady || !window.portalSupabase) return false;
 
-function initEvents() {
-  const search =
-    document.querySelector('#search') ||
-    document.querySelector('#searchInput');
+  try {
+    const [{ data: cats, error: e1 }, { data: links, error: e2 }] = await Promise.all([
+      portalSupabase.from('categories').select('*').eq('active', true).order('sort_order'),
+      portalSupabase.from('links').select('*, categories(name)').eq('active', true).order('sort_order')
+    ]);
 
-  if (search) {
-    search.addEventListener('input', event => {
-      S.q = event.target.value || '';
-      render();
+    if (e1 || e2 || !cats || !links) {
+      return false;
+    }
+
+    S.data = processData(cats, links);
+    S.usingDb = true;
+
+    const { data: { user } } = await portalSupabase.auth.getUser();
+    if (user) {
+      const { data: f } = await portalSupabase.from('favorites').select('link_id').eq('user_id', user.id);
+      S.dbFavorites = new Set((f || []).map(v => String(v.link_id)));
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function loadLocal() {
+  const savedCats = JSON.parse(localStorage.getItem('pti_local_cats') || 'null');
+  const savedLinks = JSON.parse(localStorage.getItem('pti_local_links') || 'null');
+  const baseData = window.portalData || (typeof portalData !== 'undefined' ? portalData : { categories: [], links: [] });
+
+  let cats = savedCats || baseData.categories || [];
+  let links = savedLinks || baseData.links || [];
+
+  if (savedCats && savedLinks) {
+    links = links.map(l => {
+      if (!l.category && l.category_id) {
+        const foundCat = cats.find(c => String(c.id) === String(l.category_id));
+        if (foundCat) l.category = foundCat.name;
+      }
+      return l;
     });
   }
 
-  document.querySelectorAll('[data-mode]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      S.mode = btn.dataset.mode || 'all';
-
-      document
-        .querySelectorAll('[data-mode]')
-        .forEach(x => x.classList.remove('active'));
-
-      btn.classList.add('active');
-
-      render();
-    });
-  });
-
-  document.querySelectorAll('[data-category]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      S.cat = btn.dataset.category || '';
-
-      render();
-    });
-  });
+  S.data = processData(cats, links);
 }
 
-/* =========================================================
-   INICIALIZAÇÃO
-   ========================================================= */
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-f]');
+  if (f) {
+    e.stopPropagation();
+    const x = S.data.links.find(v => String(v.id) === String(f.dataset.f));
+    if (x) toggleFavorite(x);
+    return;
+  }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  initEvents();
+  const o = e.target.closest('[data-o]');
+  if (o) {
+    const x = S.data.links.find(v => String(v.id) === String(o.dataset.o));
+    if (x) openItem(x);
+    return;
+  }
+
+  const c = e.target.closest('[data-c]');
+  if (c) {
+    S.cat = S.cat === c.dataset.c ? '' : c.dataset.c;
+    S.mode = 'all';
+    render();
+  }
+});
+
+$('#q')?.addEventListener('input', e => {
+  S.q = e.target.value;
+  S.cat = '';
+  S.mode = 'all';
+  render();
+});
+
+$('#clear')?.addEventListener('click', () => {
+  if ($('#q')) $('#q').value = '';
+  S.q = '';
+  render();
+});
+
+$('#favoritesBtn')?.addEventListener('click', () => {
+  S.mode = 'fav';
+  S.cat = '';
+  render();
+});
+
+$('#recentBtn')?.addEventListener('click', () => {
+  S.mode = 'recent';
+  S.cat = '';
+  render();
+});
+
+$('#allBtn')?.addEventListener('click', () => {
+  S.mode = 'all';
+  S.cat = '';
+  if ($('#q')) $('#q').value = '';
+  S.q = '';
+  render();
+});
+
+$('#theme')?.addEventListener('click', () => {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  document.documentElement.dataset.theme = newTheme;
+  localStorage.setItem('pti_theme', newTheme);
+});
+
+(async () => {
+  const savedTheme = localStorage.getItem('pti_theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  loadLocal();
 
   await loadDb();
 
+  const footerInfo = $('#footerInfo');
+  if (footerInfo) {
+    footerInfo.textContent = `${S.data.links.length} atalhos · ${S.data.categories.length} categorias${S.usingDb ? ' · Supabase conectado' : ' · Modo local'}`;
+  }
+
   render();
-  renderQuick();
-});
+})();
