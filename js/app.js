@@ -1,271 +1,274 @@
-/* ============================================================
-   PORTAL TI — XANXERÊ
-   APP.JS
-   ============================================================ */
-
 const S = {
   cat: '',
   q: '',
   mode: 'all',
-
   data: {
     categories: [],
     links: []
   },
-
-  recent: JSON.parse(
-    localStorage.getItem('pti_recent') || '[]'
-  ),
-
-  favorites: JSON.parse(
-    localStorage.getItem('pti_fav') || '[]'
-  ),
-
+  recent: JSON.parse(localStorage.getItem('pti_recent') || '[]'),
+  favorites: JSON.parse(localStorage.getItem('pti_fav') || '[]'),
   dbFavorites: new Set(),
-
   usingDb: false
 };
 
+const $ = s => document.querySelector(s);
 
-/* ============================================================
-   UTILITÁRIOS
-   ============================================================ */
-
-const $ = selector =>
-  document.querySelector(selector);
-
-
-const esc = value =>
-  String(value ?? '').replace(
+const esc = x =>
+  String(x ?? '').replace(
     /[&<>"']/g,
-    char => ({
+    c => ({
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#039;'
-    }[char])
+    }[c])
   );
 
 
 /* ============================================================
-   ÍCONES — ESTILO GOOGLE / GMAIL
+   ÍCONES SVG
    ============================================================ */
+
+const categoryIconMap = new Map();
 
 const ICONS = {
 
-  folder: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>
-      <path d="M3.5 9h17"/>
+  'Manuais': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5V4.5Z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M5 4.5V19a2.5 2.5 0 0 1 2.5-2.5H19"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  file: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6.5 3.5h7l4 4v13h-11a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/>
-      <path d="M13.5 3.5v4h4"/>
-      <path d="M8 12h7"/>
-      <path d="M8 15.5h5"/>
+  'Telefonia': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7.2 3.8 4.8 5.2c-.9.5-1.3 1.6-.9 2.6
+        2.2 5.6 6.7 10.1 12.3 12.3 1 .4 2.1 0 2.6-.9l1.4-2.4
+        c.4-.7.2-1.6-.4-2l-3.1-2.1c-.6-.4-1.4-.3-1.9.2l-1.3 1.3
+        a15.7 15.7 0 0 1-4.2-4.2l1.3-1.3c.5-.5.6-1.3.2-1.9
+        L9.2 4.2c-.4-.6-1.3-.8-2-.4Z"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
     </svg>
   `,
 
-  document: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6.5 3.5h7l4 4v13h-11a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/>
-      <path d="M13.5 3.5v4h4"/>
-      <path d="M8 11.5h7"/>
-      <path d="M8 15h7"/>
-      <path d="M8 18.5h4"/>
+  'Rede': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle
+        cx="12"
+        cy="12"
+        r="8.5"
+        stroke="currentColor"
+        stroke-width="1.7"
+      />
+      <path
+        d="M3.8 12h16.4
+        M12 3.5c2.1 2.3 3.2 5.1 3.2 8.5S14.1 18.2 12 20.5
+        C9.9 18.2 8.8 15.4 8.8 12S9.9 5.8 12 3.5Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+      />
     </svg>
   `,
 
-  book: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 4.5h10.5a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2v-12z"/>
-      <path d="M17.5 19.5H7a2 2 0 0 1-2-2"/>
-      <path d="M8.5 8h6"/>
-      <path d="M8.5 11.5h5"/>
-      <path d="M8.5 15h6"/>
+  'Softwares': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="3.5"
+        y="4"
+        width="17"
+        height="13"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="1.7"
+      />
+      <path
+        d="M8 20h8M12 17v3
+        M7.5 8h3M13.5 8h3M7.5 11.5h9"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  phone: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7.2 4.2l3.1 3.1-2 2.4a14.5 14.5 0 0 0 6 6l2.4-2 3.1 3.1-1.7 2.2a2.2 2.2 0 0 1-2.4.7C8.7 17.7 6.3 15.3 4.3 8.3a2.2 2.2 0 0 1 .7-2.4z"/>
+  'Administrativo': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 7.5h14v12H5z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M8 7.5V5.8A1.8 1.8 0 0 1 9.8 4h4.4
+        A1.8 1.8 0 0 1 16 5.8v1.7
+        M8.5 12h7M8.5 15.5H13"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  network: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="9" y="3.5" width="6" height="4" rx="1"/>
-      <rect x="3.5" y="16.5" width="6" height="4" rx="1"/>
-      <rect x="14.5" y="16.5" width="6" height="4" rx="1"/>
-      <path d="M12 7.5v4"/>
-      <path d="M6.5 16.5v-3h11v3"/>
+  'Termos': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 3.5h9l4 4v13H6z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M15 3.5v4h4M9 12h6M9 15.5h6"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  computer: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3.5" y="4" width="17" height="12" rx="1.8"/>
-      <path d="M8 20h8"/>
-      <path d="M12 16v4"/>
-      <path d="M7 7.5h10"/>
+  'Reconhecimento de curso': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="m12 3 2.2 4.5 5 .7-3.6 3.5.9 5
+        -4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3Z"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
     </svg>
   `,
 
-  graduation: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 8.5L12 4l9 4.5-9 4.5z"/>
-      <path d="M7 11v4.5c3 2 7 2 10 0V11"/>
-      <path d="M21 8.5v5"/>
+  'Planejamento': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="4"
+        y="5.5"
+        width="16"
+        height="15"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="1.7"
+      />
+      <path
+        d="M8 3.5v4M16 3.5v4M4 9.5h16
+        M8 13h3M13 13h3M8 16.5h3"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  calendar: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="2"/>
-      <path d="M8 3v4"/>
-      <path d="M16 3v4"/>
-      <path d="M4 9h16"/>
-      <path d="M8 13h2"/>
-      <path d="M13 13h3"/>
-      <path d="M8 16.5h2"/>
-      <path d="M13 16.5h3"/>
+  'SENHAS': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle
+        cx="8.5"
+        cy="14.5"
+        r="3.5"
+        stroke="currentColor"
+        stroke-width="1.7"
+      />
+      <path
+        d="m11.5 12 7.5-7.5M16 5l3 3
+        M14.5 9.5l2 2"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
     </svg>
   `,
 
-  key: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="8" cy="15.5" r="4"/>
-      <path d="M11 12.5l8-8"/>
-      <path d="M16 6l2 2"/>
-      <path d="M18 4l2 2"/>
+  'Datashow': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="1.7"
+      />
+      <path
+        d="M9 20h6M12 17v3"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  projector: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3.5" y="5" width="17" height="11" rx="2"/>
-      <circle cx="7.5" cy="10.5" r="1.2"/>
-      <path d="M11 10.5h6"/>
-      <path d="M8 20h8"/>
-      <path d="M12 16v4"/>
+  'Contratos OBC': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 5.5h9l5 5v8H5z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M14 5.5v5h5M8 14h8M8 17h5"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
     </svg>
   `,
 
-  box: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7.5l8-4 8 4-8 4z"/>
-      <path d="M4 7.5v9l8 4 8-4v-9"/>
-      <path d="M12 11.5v9"/>
-      <path d="M8 5.5l8 4"/>
-    </svg>
-  `,
-
-  search: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="10.8" cy="10.8" r="6.5"/>
-      <path d="M16 16l4.5 4.5"/>
-    </svg>
-  `,
-
-  star: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3.8l2.5 5.1 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>
-    </svg>
-  `,
-
-  arrow: `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M7 17L17 7"/>
-      <path d="M9 7h8v8"/>
+  'default': `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3.5 7.5h7l1.8 2h8.2v9a2 2 0 0 1-2 2h-13
+        a2 2 0 0 1-2-2v-11Z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M3.5 9.5h17"
+        stroke="currentColor"
+        stroke-width="1.5"
+      />
     </svg>
   `
 };
 
 
-/* ============================================================
-   ÍCONE DA CATEGORIA
-   ============================================================ */
+function getCategoryIcon(c) {
 
-function getCategoryIconType(category) {
-
-  const name =
-    String(category || '')
-      .trim()
-      .toLocaleLowerCase('pt-BR');
-
-
-  if (name.includes('manual'))
-    return 'book';
-
-
-  if (name.includes('telefon'))
-    return 'phone';
-
-
-  if (name.includes('rede'))
-    return 'network';
-
+  const custom = categoryIconMap.get(c);
 
   if (
-    name.includes('software') ||
-    name.includes('program')
-  )
-    return 'computer';
+    custom &&
+    String(custom).trim().startsWith('<svg')
+  ) {
+    return custom;
+  }
 
-
-  if (name.includes('administr'))
-    return 'document';
-
-
-  if (name.includes('termo'))
-    return 'file';
-
-
-  if (
-    name.includes('reconhecimento') ||
-    name.includes('curso')
-  )
-    return 'graduation';
-
-
-  if (name.includes('planejamento'))
-    return 'calendar';
-
-
-  if (name.includes('senha'))
-    return 'key';
-
-
-  if (name.includes('datashow'))
-    return 'projector';
-
-
-  if (
-    name.includes('contrato') ||
-    name.includes('obc')
-  )
-    return 'box';
-
-
-  return 'folder';
-}
-
-
-function getCategoryIcon(category) {
-
-  const type =
-    getCategoryIconType(category);
-
-  return ICONS[type] || ICONS.folder;
+  return ICONS[c] || ICONS.default;
 }
 
 
 /* ============================================================
-   PROCESSAMENTO DOS DADOS
+   DADOS
    ============================================================ */
 
 function processData(cats, links) {
@@ -278,13 +281,17 @@ function processData(cats, links) {
 
       catNames.push(c);
 
-    } else if (
-      c &&
-      typeof c === 'object' &&
-      c.name
-    ) {
+    } else if (c && typeof c === 'object') {
 
-      catNames.push(c.name);
+      if (c.name) {
+
+        catNames.push(c.name);
+
+        if (c.icon) {
+          categoryIconMap.set(c.name, c.icon);
+        }
+
+      }
 
     }
 
@@ -293,39 +300,25 @@ function processData(cats, links) {
 
   return {
 
-    categories: [
-      ...new Set(catNames)
-    ],
+    categories: [...new Set(catNames)],
 
     links: (links || [])
-
-      .filter(
-        l => l.active !== false
-      )
-
+      .filter(l => l.active !== false)
       .map(l => {
 
         const catName =
           typeof l.category === 'string'
             ? l.category
             : (
-                l.category_name ||
-                l.categories?.name ||
-                'Sem categoria'
-              );
-
+              l.category_name ||
+              l.categories?.name ||
+              'Sem categoria'
+            );
 
         return {
-
           ...l,
-
           category: catName,
-
-          url_original:
-            l.url_original ||
-            l.url ||
-            ''
-
+          url_original: l.url_original || l.url || ''
         };
 
       })
@@ -358,26 +351,25 @@ function saveLocal() {
    TOAST
    ============================================================ */
 
-function toast(message) {
+function toast(msg) {
 
   const t = $('#toast');
 
   if (!t) return;
 
-  t.textContent = message;
+  t.textContent = msg;
 
   t.hidden = false;
   t.style.display = 'block';
 
   clearTimeout(window.__toast);
 
-  window.__toast =
-    setTimeout(() => {
+  window.__toast = setTimeout(() => {
 
-      t.hidden = true;
-      t.style.display = 'none';
+    t.hidden = true;
+    t.style.display = 'none';
 
-    }, 3500);
+  }, 3500);
 
 }
 
@@ -388,8 +380,7 @@ function toast(message) {
 
 function isFav(x) {
 
-  const idStr =
-    String(x.id);
+  const idStr = String(x.id);
 
   return S.usingDb
     ? S.dbFavorites.has(idStr)
@@ -404,86 +395,56 @@ function isFav(x) {
 
 function resolveUrl(x) {
 
-  let u =
-    String(
-      x.url_original ||
-      x.url ||
-      ''
-    ).trim();
+  let u = String(
+    x.url_original ||
+    x.url ||
+    ''
+  ).trim();
+
+  if (!u) return null;
 
 
-  if (!u)
-    return null;
-
-
-  if (
-    /^https?:\/\//i.test(u)
-  ) {
-
+  if (/^https?:\/\//i.test(u)) {
     return u;
+  }
+
+
+  if (/^[A-Za-z]:[\\/]/.test(u)) {
+
+    return 'file:///' +
+      u.replace(/\\/g, '/');
 
   }
 
 
-  if (
-    /^[A-Za-z]:[\\/]/.test(u)
-  ) {
+  if (/^\\\\/.test(u)) {
 
-    return (
-      'file:///' +
-      u.replace(/\\/g, '/')
-    );
-
-  }
-
-
-  if (
-    /^\\\\/.test(u)
-  ) {
-
-    return (
-      'file://' +
+    return 'file://' +
       u
         .replace(/^\\\\+/, '')
-        .replace(/\\/g, '/')
-    );
+        .replace(/\\/g, '/');
 
   }
 
 
-  if (
-    /^file:\/\//i.test(u)
-  ) {
+  if (/^file:\/\//i.test(u)) {
 
     let rest =
-      u.replace(
-        /^file:\/+/i,
-        ''
-      );
-
+      u.replace(/^file:\/+/i, '');
 
     rest =
       rest
         .replace(/^\\\\+/, '')
         .replace(/\\/g, '/');
 
+    if (/^[A-Za-z]:/.test(rest)) {
 
-    if (
-      /^[A-Za-z]:/.test(rest)
-    ) {
-
-      return (
-        'file:///' +
-        rest
-      );
+      return 'file:///' + rest;
 
     }
 
-
-    return (
-      'file://' +
-      rest.replace(/^\/+/, '')
-    );
+    return 'file://' +
+      rest.replace(/^\/+/, '');
 
   }
 
@@ -491,31 +452,23 @@ function resolveUrl(x) {
   const cfg =
     window.PORTAL_CONFIG || {};
 
-
   let root =
-    String(
-      cfg.networkRoot || ''
-    ).trim();
+    String(cfg.networkRoot || '').trim();
 
 
   if (root) {
 
     root =
-      root.replace(
-        /\\/g,
-        '/'
-      );
+      root.replace(/\\/g, '/');
 
-
-    if (!root.endsWith('/'))
+    if (!root.endsWith('/')) {
       root += '/';
+    }
 
-
-    const cleanRel =
+    let cleanRel =
       u
         .replace(/\\/g, '/')
         .replace(/^\.\//, '');
-
 
     try {
 
@@ -526,10 +479,7 @@ function resolveUrl(x) {
 
     } catch (e) {
 
-      return (
-        root +
-        cleanRel
-      );
+      return root + cleanRel;
 
     }
 
@@ -550,9 +500,7 @@ function officeProtocolUrl(url) {
   let path =
     String(url || '').trim();
 
-
-  if (!path)
-    return null;
+  if (!path) return null;
 
 
   const lower =
@@ -563,28 +511,21 @@ function officeProtocolUrl(url) {
 
 
   if (
-    /\.(xlsx|xls|xlsm|xlsb|csv)$/i
-      .test(lower)
+    /\.(xlsx|xls|xlsm|xlsb|csv)$/i.test(lower)
   ) {
 
     protocol =
       'ms-excel:ofe|u|';
 
-  }
-
-  else if (
-    /\.(docx|doc|docm|rtf)$/i
-      .test(lower)
+  } else if (
+    /\.(docx|doc|docm|rtf)$/i.test(lower)
   ) {
 
     protocol =
       'ms-word:ofe|u|';
 
-  }
-
-  else if (
-    /\.(pptx|ppt|pptm|ppsx|pps)$/i
-      .test(lower)
+  } else if (
+    /\.(pptx|ppt|pptm|ppsx|pps)$/i.test(lower)
   ) {
 
     protocol =
@@ -593,13 +534,12 @@ function officeProtocolUrl(url) {
   }
 
 
-  if (!protocol)
+  if (!protocol) {
     return null;
+  }
 
 
-  if (
-    /^file:\/\//i.test(path)
-  ) {
+  if (/^file:\/\//i.test(path)) {
 
     path =
       path.replace(
@@ -608,41 +548,26 @@ function officeProtocolUrl(url) {
       );
 
     path =
-      path.replace(
-        /^\\+/,
-        ''
-      );
+      path.replace(/^\\+/, '');
 
 
-    if (
-      /^[A-Za-z]:[\\/]/.test(path)
-    ) {
+    if (/^[A-Za-z]:[\\/]/.test(path)) {
 
       path =
-        path.replace(
-          /\//g,
-          '\\'
-        );
+        path.replace(/\//g, '\\');
 
-    }
-
-    else {
+    } else {
 
       path =
         '\\\\' +
-        path.replace(
-          /\//g,
-          '\\'
-        );
+        path.replace(/\//g, '\\');
 
     }
 
   }
 
 
-  if (
-    /^\\\\/.test(path)
-  ) {
+  if (/^\\\\/.test(path)) {
 
     const fileUrl =
       'file://' +
@@ -650,31 +575,18 @@ function officeProtocolUrl(url) {
         .replace(/^\\\\+/, '')
         .replace(/\\/g, '/');
 
-
-    return (
-      protocol +
-      fileUrl
-    );
+    return protocol + fileUrl;
 
   }
 
 
-  if (
-    /^[A-Za-z]:[\\/]/.test(path)
-  ) {
+  if (/^[A-Za-z]:[\\/]/.test(path)) {
 
     const fileUrl =
       'file:///' +
-      path.replace(
-        /\\/g,
-        '/'
-      );
+      path.replace(/\\/g, '/');
 
-
-    return (
-      protocol +
-      fileUrl
-    );
+    return protocol + fileUrl;
 
   }
 
@@ -682,49 +594,32 @@ function officeProtocolUrl(url) {
   const cfg =
     window.PORTAL_CONFIG || {};
 
-
   let root =
-    String(
-      cfg.networkRoot || ''
-    ).trim();
+    String(cfg.networkRoot || '').trim();
 
 
   if (root) {
 
     root =
-      root.replace(
-        /\\/g,
-        '/'
-      );
+      root.replace(/\\/g, '/');
 
-
-    if (!root.endsWith('/'))
+    if (!root.endsWith('/')) {
       root += '/';
-
+    }
 
     const relative =
       path
         .replace(/\\/g, '/')
         .replace(/^\.\//, '');
 
-
     return (
       protocol +
+      'file://' +
       (
-        'file://' +
-        (
-          root +
-          relative
-        )
-          .replace(
-            /^file:\/+/i,
-            ''
-          )
-          .replace(
-            /^\/+/,
-            ''
-          )
+        root + relative
       )
+        .replace(/^file:\/+/i, '')
+        .replace(/^\/+/, '')
     );
 
   }
@@ -765,17 +660,16 @@ function openItem(x) {
 
 
   S.recent = [
-
     idStr,
-
     ...S.recent.filter(
       v => String(v) !== idStr
     )
-
   ].slice(0, 8);
 
 
   saveLocal();
+
+  renderQuick();
 
 
   const url =
@@ -793,10 +687,6 @@ function openItem(x) {
   }
 
 
-  /* ----------------------------------------------------------
-     LINKS WEB
-     ---------------------------------------------------------- */
-
   if (
     /^https?:\/\//i.test(url)
   ) {
@@ -812,10 +702,6 @@ function openItem(x) {
   }
 
 
-  /* ----------------------------------------------------------
-     ARQUIVOS OFFICE
-     ---------------------------------------------------------- */
-
   const officeUrl =
     officeProtocolUrl(url);
 
@@ -825,24 +711,15 @@ function openItem(x) {
     const a =
       document.createElement('a');
 
+    a.href = officeUrl;
+    a.target = '_self';
+    a.rel = 'noopener';
 
-    a.href =
-      officeUrl;
-
-    a.target =
-      '_self';
-
-    a.rel =
-      'noopener';
-
-    a.style.display =
-      'none';
-
+    a.style.display = 'none';
 
     document.body.appendChild(a);
 
     a.click();
-
 
     setTimeout(
       () => a.remove(),
@@ -854,10 +731,6 @@ function openItem(x) {
   }
 
 
-  /* ----------------------------------------------------------
-     OUTROS ARQUIVOS / CAMINHOS
-     ---------------------------------------------------------- */
-
   window.open(
     url,
     '_blank',
@@ -868,21 +741,21 @@ function openItem(x) {
 
 
 /* ============================================================
-   FILTROS
+   FILTRO
    ============================================================ */
 
 function filtered() {
 
-  let a =
-    [...S.data.links];
+  let a = [
+    ...S.data.links
+  ];
 
 
   if (S.cat) {
 
     a =
       a.filter(
-        x =>
-          x.category === S.cat
+        x => x.category === S.cat
       );
 
   }
@@ -900,14 +773,12 @@ function filtered() {
 
     a =
       a
-
         .filter(
           x =>
             S.recent.includes(
               String(x.id)
             )
         )
-
         .sort(
           (x, y) =>
             S.recent.indexOf(
@@ -928,7 +799,6 @@ function filtered() {
         'pt-BR'
       );
 
-
     const terms =
       q
         .split(/\s+/)
@@ -939,22 +809,15 @@ function filtered() {
       a.filter(x => {
 
         const searchBlob =
-          `
-            ${x.name}
-            ${x.category}
-            ${x.description || ''}
-            ${x.url_original || x.url || ''}
-          `
-          .toLocaleLowerCase(
-            'pt-BR'
-          );
+          `${x.name} ${x.category} ${x.description || ''} ${x.url_original || x.url || ''}`
+            .toLocaleLowerCase(
+              'pt-BR'
+            );
 
 
         return terms.every(
           term =>
-            searchBlob.includes(
-              term
-            )
+            searchBlob.includes(term)
         );
 
       });
@@ -991,10 +854,10 @@ function card(x) {
       ? 'WEB'
 
       : (
-          /^file:\/\//i.test(raw) ||
-          /^[A-Za-z]:[\\/]/.test(raw) ||
-          /^\\\\/.test(raw)
-        )
+        /^file:\/\//i.test(raw) ||
+        /^[A-Za-z]:[\\/]/.test(raw) ||
+        /^\\\\/.test(raw)
+      )
 
         ? 'ARQUIVO / REDE'
 
@@ -1002,11 +865,9 @@ function card(x) {
 
 
   return `
-
     <article
       class="card"
       data-o="${esc(x.id)}"
-      data-category="${esc(x.category)}"
     >
 
       <div class="ct">
@@ -1022,20 +883,11 @@ function card(x) {
         <button
           class="star ${f ? 'on' : ''}"
           data-f="${esc(x.id)}"
-          title="${
-            f
-              ? 'Remover favorito'
-              : 'Adicionar favorito'
-          }"
-          aria-label="${
-            f
-              ? 'Remover favorito'
-              : 'Adicionar favorito'
-          }"
+          title="${f ? 'Remover favorito' : 'Adicionar favorito'}"
+          aria-label="${f ? 'Remover favorito' : 'Adicionar favorito'}"
+          type="button"
         >
-
-          ${ICONS.star}
-
+          ${f ? '★' : '☆'}
         </button>
 
       </div>
@@ -1044,14 +896,6 @@ function card(x) {
       <h3>
         ${esc(x.name)}
       </h3>
-
-
-      <p>
-        ${esc(
-          x.description ||
-          x.category
-        )}
-      </p>
 
 
       <div class="cf">
@@ -1064,52 +908,74 @@ function card(x) {
         <button
           class="open-btn"
           data-o="${esc(x.id)}"
+          type="button"
         >
-
-          <span>
-            Abrir
-          </span>
-
-          ${ICONS.arrow}
-
+          Abrir
+          <span aria-hidden="true">↗</span>
         </button>
 
       </div>
 
     </article>
-
   `;
 
 }
 
 
 /* ============================================================
-   ACESSOS RÁPIDOS
-   ============================================================
-   A área "Mais utilizados" não é mais utilizada no layout.
-   Caso ainda exista no index.html antigo, ela será escondida.
+   ACESSO RÁPIDO
    ============================================================ */
 
 function renderQuick() {
 
-  const quick =
-    document.querySelector(
-      '.quick'
-    );
+  const favList =
+    S.usingDb
+      ? Array.from(S.dbFavorites)
+      : S.favorites;
 
 
-  if (quick) {
+  const ids =
+    [
+      ...favList,
+      ...S.recent.filter(
+        id =>
+          !favList.includes(
+            String(id)
+          )
+      )
+    ].slice(0, 8);
 
-    quick.style.display =
-      'none';
 
-  }
+  const a =
+    ids
+      .map(
+        id =>
+          S.data.links.find(
+            x =>
+              String(x.id) ===
+              String(id)
+          )
+      )
+      .filter(Boolean);
+
+
+  const qg =
+    $('#quickGrid');
+
+
+  if (!qg) return;
+
+
+  qg.innerHTML =
+    a.length
+      ? a.map(card).join('')
+      : '';
 
 }
 
 
 /* ============================================================
-   RENDERIZAÇÃO
+   RENDER
    ============================================================ */
 
 function render() {
@@ -1121,18 +987,14 @@ function render() {
   const grid =
     $('#grid');
 
-
   const empty =
     $('#empty');
-
 
   const count =
     $('#count');
 
-
   const title =
     $('#sectionTitle');
-
 
   const chips =
     $('#chips');
@@ -1170,13 +1032,9 @@ function render() {
 
     title.textContent =
       S.mode === 'fav'
-
         ? 'Favoritos'
-
         : S.mode === 'recent'
-
           ? 'Recentes'
-
           : S.cat ||
             'Todos os atalhos';
 
@@ -1187,36 +1045,22 @@ function render() {
 
     chips.innerHTML =
       S.data.categories
-
-        .map(category => `
-
+        .map(c => `
           <button
-            class="
-              chip
-              ${
-                S.cat === category
-                  ? 'sel'
-                  : ''
-              }
-            "
-            data-c="${esc(category)}"
+            class="chip ${S.cat === c ? 'sel' : ''}"
+            data-c="${esc(c)}"
+            type="button"
           >
-
             <span
               class="chip-icon"
               aria-hidden="true"
             >
-              ${getCategoryIcon(category)}
+              ${getCategoryIcon(c)}
             </span>
 
-            <span>
-              ${esc(category)}
-            </span>
-
+            ${esc(c)}
           </button>
-
         `)
-
         .join('');
 
   }
@@ -1236,10 +1080,6 @@ async function toggleFavorite(x) {
   const idStr =
     String(x.id);
 
-
-  /* ----------------------------------------------------------
-     MODO LOCAL
-     ---------------------------------------------------------- */
 
   if (!S.usingDb) {
 
@@ -1265,10 +1105,6 @@ async function toggleFavorite(x) {
   }
 
 
-  /* ----------------------------------------------------------
-     SUPABASE
-     ---------------------------------------------------------- */
-
   if (!window.portalSupabase) {
 
     toast(
@@ -1281,9 +1117,7 @@ async function toggleFavorite(x) {
 
 
   const {
-    data: {
-      user
-    }
+    data: { user }
   } =
     await portalSupabase.auth.getUser();
 
@@ -1299,35 +1133,21 @@ async function toggleFavorite(x) {
   }
 
 
-  if (
-    S.dbFavorites.has(idStr)
-  ) {
+  if (S.dbFavorites.has(idStr)) {
 
     const {
       error
     } =
       await portalSupabase
-
         .from('favorites')
-
         .delete()
-
-        .eq(
-          'user_id',
-          user.id
-        )
-
-        .eq(
-          'link_id',
-          x.id
-        );
+        .eq('user_id', user.id)
+        .eq('link_id', x.id);
 
 
     if (error) {
 
-      toast(
-        error.message
-      );
+      toast(error.message);
 
     } else {
 
@@ -1343,25 +1163,16 @@ async function toggleFavorite(x) {
       error
     } =
       await portalSupabase
-
         .from('favorites')
-
         .insert({
-
-          user_id:
-            user.id,
-
-          link_id:
-            x.id
-
+          user_id: user.id,
+          link_id: x.id
         });
 
 
     if (error) {
 
-      toast(
-        error.message
-      );
+      toast(error.message);
 
     } else {
 
@@ -1389,61 +1200,37 @@ async function loadDb() {
     !window.supabaseReady ||
     !window.portalSupabase
   ) {
-
     return false;
-
   }
 
 
   try {
 
     const [
-
       {
         data: cats,
         error: e1
       },
-
       {
         data: links,
         error: e2
       }
-
     ] =
       await Promise.all([
 
         portalSupabase
-
           .from('categories')
-
           .select('*')
-
-          .eq(
-            'active',
-            true
-          )
-
-          .order(
-            'sort_order'
-          ),
-
+          .eq('active', true)
+          .order('sort_order'),
 
         portalSupabase
-
           .from('links')
-
           .select(
             '*, categories(name)'
           )
-
-          .eq(
-            'active',
-            true
-          )
-
-          .order(
-            'sort_order'
-          )
+          .eq('active', true)
+          .order('sort_order')
 
       ]);
 
@@ -1454,9 +1241,7 @@ async function loadDb() {
       !cats ||
       !links
     ) {
-
       return false;
-
     }
 
 
@@ -1485,13 +1270,8 @@ async function loadDb() {
         data: f
       } =
         await portalSupabase
-
           .from('favorites')
-
-          .select(
-            'link_id'
-          )
-
+          .select('link_id')
           .eq(
             'user_id',
             user.id
@@ -1500,13 +1280,10 @@ async function loadDb() {
 
       S.dbFavorites =
         new Set(
-          (f || [])
-            .map(
-              v =>
-                String(
-                  v.link_id
-                )
-            )
+          (f || []).map(
+            v =>
+              String(v.link_id)
+          )
         );
 
     }
@@ -1552,13 +1329,9 @@ function loadLocal() {
 
   const baseData =
     window.portalData ||
-
     (
-      typeof portalData !==
-      'undefined'
-
+      typeof portalData !== 'undefined'
         ? portalData
-
         : {
             categories: [],
             links: []
@@ -1595,9 +1368,7 @@ function loadLocal() {
             cats.find(
               c =>
                 String(c.id) ===
-                String(
-                  l.category_id
-                )
+                String(l.category_id)
             );
 
 
@@ -1633,35 +1404,29 @@ function loadLocal() {
 
 document.addEventListener(
   'click',
-  event => {
+  e => {
 
-    /* FAVORITO */
-
-    const favorite =
-      event.target.closest(
+    const f =
+      e.target.closest(
         '[data-f]'
       );
 
 
-    if (favorite) {
+    if (f) {
 
-      event.stopPropagation();
+      e.stopPropagation();
 
 
       const x =
         S.data.links.find(
-          item =>
-            String(item.id) ===
-            String(
-              favorite.dataset.f
-            )
+          v =>
+            String(v.id) ===
+            String(f.dataset.f)
         );
 
 
       if (x) {
-
         toggleFavorite(x);
-
       }
 
 
@@ -1670,30 +1435,24 @@ document.addEventListener(
     }
 
 
-    /* ABRIR */
-
-    const open =
-      event.target.closest(
+    const o =
+      e.target.closest(
         '[data-o]'
       );
 
 
-    if (open) {
+    if (o) {
 
       const x =
         S.data.links.find(
-          item =>
-            String(item.id) ===
-            String(
-              open.dataset.o
-            )
+          v =>
+            String(v.id) ===
+            String(o.dataset.o)
         );
 
 
       if (x) {
-
         openItem(x);
-
       }
 
 
@@ -1702,23 +1461,18 @@ document.addEventListener(
     }
 
 
-    /* CATEGORIA */
-
-    const category =
-      event.target.closest(
+    const c =
+      e.target.closest(
         '[data-c]'
       );
 
 
-    if (category) {
+    if (c) {
 
       S.cat =
-        S.cat ===
-        category.dataset.c
-
+        S.cat === c.dataset.c
           ? ''
-
-          : category.dataset.c;
+          : c.dataset.c;
 
 
       S.mode =
@@ -1739,19 +1493,16 @@ document.addEventListener(
 
 $('#q')?.addEventListener(
   'input',
-  event => {
+  e => {
 
     S.q =
-      event.target.value;
-
+      e.target.value;
 
     S.cat =
       '';
 
-
     S.mode =
       'all';
-
 
     render();
 
@@ -1764,56 +1515,42 @@ $('#clear')?.addEventListener(
   () => {
 
     if ($('#q')) {
-
-      $('#q').value =
-        '';
-
+      $('#q').value = '';
     }
 
-
-    S.q =
-      '';
-
+    S.q = '';
 
     render();
+
+    $('#q')?.focus();
 
   }
 );
 
 
 /* ============================================================
-   FILTRO FAVORITOS
+   MODOS
    ============================================================ */
 
 $('#favoritesBtn')?.addEventListener(
   'click',
   () => {
 
-    S.mode =
-      'fav';
-
-    S.cat =
-      '';
+    S.mode = 'fav';
+    S.cat = '';
 
     render();
 
   }
 );
 
-
-/* ============================================================
-   FILTRO RECENTES
-   ============================================================ */
 
 $('#recentBtn')?.addEventListener(
   'click',
   () => {
 
-    S.mode =
-      'recent';
-
-    S.cat =
-      '';
+    S.mode = 'recent';
+    S.cat = '';
 
     render();
 
@@ -1821,32 +1558,18 @@ $('#recentBtn')?.addEventListener(
 );
 
 
-/* ============================================================
-   TODOS
-   ============================================================ */
-
 $('#allBtn')?.addEventListener(
   'click',
   () => {
 
-    S.mode =
-      'all';
-
-    S.cat =
-      '';
-
+    S.mode = 'all';
+    S.cat = '';
 
     if ($('#q')) {
-
-      $('#q').value =
-        '';
-
+      $('#q').value = '';
     }
 
-
-    S.q =
-      '';
-
+    S.q = '';
 
     render();
 
@@ -1864,8 +1587,7 @@ $('#theme')?.addEventListener(
 
     const isDark =
       document.documentElement
-        .dataset
-        .theme === 'dark';
+        .dataset.theme === 'dark';
 
 
     const newTheme =
@@ -1875,9 +1597,8 @@ $('#theme')?.addEventListener(
 
 
     document.documentElement
-      .dataset
-      .theme =
-        newTheme;
+      .dataset.theme =
+      newTheme;
 
 
     localStorage.setItem(
@@ -1904,15 +1625,13 @@ $('#theme')?.addEventListener(
   if (savedTheme) {
 
     document.documentElement
-      .dataset
-      .theme =
-        savedTheme;
+      .dataset.theme =
+      savedTheme;
 
   }
 
 
   loadLocal();
-
 
   await loadDb();
 
