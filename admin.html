@@ -6,175 +6,559 @@
   <title>Administração — Portal TI</title>
   <link rel="icon" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .path-input-row {
+      display: flex;
+      gap: .5rem;
+      align-items: stretch;
+    }
+
+    .path-input-row #linkUrl {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .path-button {
+      white-space: nowrap;
+    }
+
+    .field-hint {
+      display: block;
+      margin-top: .35rem;
+      font-size: .75rem;
+      line-height: 1.35;
+      opacity: .72;
+    }
+
+    .field-hint.success {
+      opacity: 1;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .field-hint.warning {
+      opacity: 1;
+      color: #b45309;
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .path-input-row {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
+
 <body>
   <div class="shell">
+
     <header class="top">
       <div class="brand">
         <a href="index.html" class="back" title="Voltar ao Portal">←</a>
+
         <div class="logo">TI</div>
+
         <div>
           <b>Portal TI</b>
           <small>Administração</small>
         </div>
       </div>
+
       <nav>
         <button id="theme" class="tool">◐ Tema</button>
         <button id="logout" class="tool" hidden>Sair</button>
       </nav>
     </header>
 
+
     <main>
+
+      <!-- LOGIN -->
       <section id="loginPanel" class="login-panel">
+
         <span>ÁREA RESTRITA</span>
+
         <h1>Administração do Portal TI</h1>
-        <p>Entre com o usuário cadastrado no Supabase Auth para gerenciar categorias e atalhos.</p>
+
+        <p>
+          Entre com o usuário cadastrado no Supabase Auth
+          para gerenciar categorias e atalhos.
+        </p>
+
         <form id="loginForm">
-          <label>E-mail
-            <input id="email" type="email" required autocomplete="username">
+
+          <label>
+            E-mail
+            <input
+              id="email"
+              type="email"
+              required
+              autocomplete="username">
           </label>
-          <label>Senha
-            <input id="password" type="password" required autocomplete="current-password">
+
+          <label>
+            Senha
+            <input
+              id="password"
+              type="password"
+              required
+              autocomplete="current-password">
           </label>
-          <button class="primary" type="submit">Entrar</button>
+
+          <button class="primary" type="submit">
+            Entrar
+          </button>
+
           <div id="loginMsg" class="form-msg"></div>
+
         </form>
+
       </section>
 
+
+      <!-- ADMINISTRAÇÃO -->
       <section id="adminPanel" hidden style="display: none;">
+
         <div class="admin-head">
+
           <div>
+
             <span>ADMINISTRAÇÃO</span>
+
             <h1>Gerenciar Portal TI</h1>
+
             <p id="sessionInfo"></p>
+
           </div>
-          <button id="newLink" class="primary">+ Novo atalho</button>
+
+          <button id="newLink" class="primary">
+            + Novo atalho
+          </button>
+
         </div>
+
 
         <div class="admin-grid">
+
+          <!-- CATEGORIAS -->
           <aside class="panel">
+
             <h2>Categorias</h2>
+
             <div id="categoryAdmin" class="table-responsive">
+
               <table class="admin-table">
+
                 <thead>
                   <tr>
                     <th>Nome</th>
-                    <th style="text-align:right;">Ações</th>
+                    <th style="text-align:right;">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody id="categoryTableBody"></tbody>
+
               </table>
+
             </div>
-            <button id="newCategory" class="secondary" style="margin-top: 1rem; width: 100%;">+ Nova categoria</button>
+
+            <button
+              id="newCategory"
+              class="secondary"
+              style="margin-top: 1rem; width: 100%;">
+
+              + Nova categoria
+
+            </button>
+
           </aside>
 
+
+          <!-- ATALHOS -->
           <section class="panel">
+
             <div class="admin-toolbar">
+
               <div>
+
                 <h2>Atalhos</h2>
+
                 <small id="adminCount"></small>
+
               </div>
-              <input id="adminSearch" placeholder="Pesquisar..." autocomplete="off">
+
+              <input
+                id="adminSearch"
+                placeholder="Pesquisar..."
+                autocomplete="off">
+
             </div>
-            <div id="adminList" class="table-responsive">
+
+
+            <div
+              id="adminList"
+              class="table-responsive">
+
               <table class="admin-table">
+
                 <thead>
+
                   <tr>
+
                     <th>Nome</th>
+
                     <th>Categoria</th>
+
                     <th>Tipo</th>
+
                     <th>Status</th>
-                    <th style="text-align:right;">Ações</th>
+
+                    <th style="text-align:right;">
+                      Ações
+                    </th>
+
                   </tr>
+
                 </thead>
+
                 <tbody id="linksTableBody"></tbody>
+
               </table>
+
             </div>
+
           </section>
+
         </div>
+
       </section>
+
     </main>
+
   </div>
 
-  <!-- Modal Editor de Atalho -->
-  <div id="editor" class="modal" hidden style="display: none;">
+
+  <!-- ========================================================= -->
+  <!-- MODAL EDITOR DE ATALHO -->
+  <!-- ========================================================= -->
+
+  <div
+    id="editor"
+    class="modal"
+    hidden
+    style="display: none;">
+
     <div class="modal-box">
+
       <div class="modal-head">
+
         <div>
-          <span id="editorEyebrow">NOVO ATALHO</span>
-          <h2 id="editorTitle">Cadastrar atalho</h2>
+
+          <span id="editorEyebrow">
+            NOVO ATALHO
+          </span>
+
+          <h2 id="editorTitle">
+            Cadastrar atalho
+          </h2>
+
         </div>
-        <button id="closeEditor" class="close" aria-label="Fechar">×</button>
+
+        <button
+          id="closeEditor"
+          class="close"
+          aria-label="Fechar">
+
+          ×
+
+        </button>
+
       </div>
+
+
       <form id="linkForm">
-        <input id="editId" type="hidden">
-        <label>Nome
-          <input id="linkName" required>
+
+        <input
+          id="editId"
+          type="hidden">
+
+
+        <!-- NOME -->
+        <label>
+          Nome
+
+          <input
+            id="linkName"
+            required>
+
         </label>
-        <label>Categoria
-          <select id="linkCategory" required></select>
-        </label>
-        <label>Descrição
-          <textarea id="linkDescription" rows="3"></textarea>
-        </label>
-        <label>URL / endereço interno
-          <input id="linkUrl" required placeholder="https://... ou caminho interno">
-        </label>
-        <label>Tipo
-          <select id="linkType">
-            <option value="internal">Rede / interno</option>
-            <option value="web">Web</option>
-            <option value="file">Arquivo</option>
+
+
+        <!-- CATEGORIA -->
+        <label>
+          Categoria
+
+          <select
+            id="linkCategory"
+            required>
           </select>
+
         </label>
+
+
+        <!-- DESCRIÇÃO -->
+        <label>
+          Descrição
+
+          <textarea
+            id="linkDescription"
+            rows="3">
+          </textarea>
+
+        </label>
+
+
+        <!-- URL / CAMINHO -->
+        <label>
+
+          URL / endereço interno
+
+          <div class="path-input-row">
+
+            <input
+              id="linkUrl"
+              required
+              placeholder="https://... ou caminho interno"
+              autocomplete="off">
+
+            <button
+              type="button"
+              id="pastePath"
+              class="secondary path-button"
+              title="Colar um caminho copiado do Windows Explorer">
+
+              📋 Colar caminho
+
+            </button>
+
+          </div>
+
+
+          <small
+            id="linkUrlHint"
+            class="field-hint">
+
+            Para arquivos da rede, copie o caminho no Windows Explorer,
+            por exemplo:
+            \\arquivos\ti\G_Xanxere_TI\...
+
+          </small>
+
+        </label>
+
+
+        <!-- TIPO -->
+        <label>
+          Tipo
+
+          <select id="linkType">
+
+            <option value="internal">
+              Rede / interno
+            </option>
+
+            <option value="web">
+              Web
+            </option>
+
+            <option value="file">
+              Arquivo
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <!-- ATIVO -->
         <label class="check">
-          <input id="linkActive" type="checkbox" checked> Ativo
+
+          <input
+            id="linkActive"
+            type="checkbox"
+            checked>
+
+          Ativo
+
         </label>
+
+
+        <!-- BOTÕES -->
         <div class="modal-actions">
-          <button type="button" id="cancelEditor" class="secondary">Cancelar</button>
-          <button class="primary" type="submit">Salvar</button>
+
+          <button
+            type="button"
+            id="cancelEditor"
+            class="secondary">
+
+            Cancelar
+
+          </button>
+
+          <button
+            class="primary"
+            type="submit">
+
+            Salvar
+
+          </button>
+
         </div>
-        <div id="formMsg" class="form-msg"></div>
+
+
+        <div
+          id="formMsg"
+          class="form-msg">
+        </div>
+
       </form>
+
     </div>
+
   </div>
 
-  <!-- Modal Categoria -->
-  <div id="categoryModal" class="modal" hidden style="display: none;" aria-hidden="true">
+
+  <!-- ========================================================= -->
+  <!-- MODAL CATEGORIA -->
+  <!-- ========================================================= -->
+
+  <div
+    id="categoryModal"
+    class="modal"
+    hidden
+    style="display: none;"
+    aria-hidden="true">
+
     <div class="modal-box small">
+
       <div class="modal-head">
+
         <div>
+
           <span>CATEGORIA</span>
-          <h2 id="categoryModalTitle">Nova categoria</h2>
+
+          <h2 id="categoryModalTitle">
+            Nova categoria
+          </h2>
+
         </div>
-        <button id="closeCategory" class="close" aria-label="Fechar">×</button>
+
+        <button
+          id="closeCategory"
+          class="close"
+          aria-label="Fechar">
+
+          ×
+
+        </button>
+
       </div>
+
+
       <form id="categoryForm">
-        <input id="editCategoryId" type="hidden">
-        <label>Nome
-          <input id="categoryName" required>
+
+        <input
+          id="editCategoryId"
+          type="hidden">
+
+
+        <label>
+          Nome
+
+          <input
+            id="categoryName"
+            required>
+
         </label>
-        <label>Descrição
-          <input id="categoryDescription">
+
+
+        <label>
+          Descrição
+
+          <input
+            id="categoryDescription">
+
         </label>
-        <label>Ícone
-          <input id="categoryIcon" value="📁" maxlength="4">
+
+
+        <label>
+          Ícone
+
+          <input
+            id="categoryIcon"
+            value="📁"
+            maxlength="4">
+
         </label>
+
+
         <div class="modal-actions">
-          <button type="button" id="cancelCategory" class="secondary">Cancelar</button>
-          <button class="primary" type="submit">Salvar</button>
+
+          <button
+            type="button"
+            id="cancelCategory"
+            class="secondary">
+
+            Cancelar
+
+          </button>
+
+          <button
+            class="primary"
+            type="submit">
+
+            Salvar
+
+          </button>
+
         </div>
-        <div id="categoryMsg" class="form-msg"></div>
+
+
+        <div
+          id="categoryMsg"
+          class="form-msg">
+        </div>
+
       </form>
+
     </div>
+
   </div>
 
-  <div id="toast" class="toast" hidden style="display: none;"></div>
 
+  <!-- TOAST -->
+  <div
+    id="toast"
+    class="toast"
+    hidden
+    style="display: none;">
+  </div>
+
+
+  <!-- SCRIPTS -->
   <script src="js/data.js"></script>
+
   <script src="js/supabase-config.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script src="js/supabase-client.js"></script>
+
   <script src="js/admin.js"></script>
+
 </body>
 </html>
