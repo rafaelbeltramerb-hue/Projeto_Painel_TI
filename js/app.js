@@ -86,25 +86,31 @@ function isFav(x) {
   return S.usingDb ? S.dbFavorites.has(idStr) : S.favorites.includes(idStr);
 }
 
-function decodeFilePath(value) {
-  let u = String(value || '').trim();
-  if (!u) return '';
+function resolveUrl(x) {
+  let u = String(x.url_original || x.url || '').trim();
+  if (!u) return null;
 
-  // Os caminhos dos arquivos não devem permanecer URL-encoded quando
-  // forem enviados aos protocolos do Office (ex.: %20, %C3%A7, %2B).
+  // Links web continuam funcionando normalmente.
+  if (/^https?:\/\//i.test(u)) return u;
+
+  // Decodifica apenas o URL encoding que veio do Excel/Supabase.
+  // O caminho Windows final NÃO deve ser codificado para o Office.
   try {
     u = decodeURIComponent(u);
   } catch (e) {
-    // Mantém o valor original caso exista algum % inválido.
+    // Mantém o valor original se houver algum % inválido.
   }
+
   return u;
 }
 
-function officeProtocolUrl(u) {
-  const clean = decodeFilePath(u);
-  const lower = clean.toLocaleLowerCase('pt-BR');
+function officeProtocolUrl(url) {
+  let path = String(url || '').trim();
+  if (!path) return null;
 
+  const lower = path.toLocaleLowerCase('pt-BR');
   let protocol = null;
+
   if (/\.(xlsx|xls|xlsm|xlsb|csv)$/i.test(lower)) {
     protocol = 'ms-excel:ofe|u|';
   } else if (/\.(docx|doc|docm|rtf)$/i.test(lower)) {
@@ -115,90 +121,81 @@ function officeProtocolUrl(u) {
 
   if (!protocol) return null;
 
-  // O Excel/Word/PowerPoint precisa receber file:// com o caminho
-  // original, sem encodeURIComponent/de URL encoding no caminho.
-  let fileUrl = clean;
+  // file:///\\arquivos\ti\... -> \\arquivos\ti\...
+  if (/^file:\/\//i.test(path)) {
+    path = path.replace(/^file:\/+/i, '');
+    path = path.replace(/^\\+/, '');
 
-  if (/^file:\/\//i.test(fileUrl)) {
-    fileUrl = 'file://' + fileUrl.replace(/^file:\/+/i, '');
-  } else if (/^\\\\/.test(fileUrl)) {
-    fileUrl = 'file://' + fileUrl.replace(/^\\\\+/, '').replace(/\\/g, '/');
-  } else if (/^[A-Za-z]:[\\/]/.test(fileUrl)) {
-    fileUrl = 'file:///' + fileUrl.replace(/\\/g, '/');
-  } else {
-    const cfg = window.PORTAL_CONFIG || {};
-    let root = String(cfg.networkRoot || '').trim();
-    if (root) {
-      root = root.replace(/\\/g, '/');
-      if (!root.endsWith('/')) root += '/';
-      fileUrl = root + fileUrl.replace(/^[\\/]+/, '').replace(/\\/g, '/');
-      if (!/^file:\/\//i.test(fileUrl)) fileUrl = 'file://' + fileUrl.replace(/^file:\/+/i, '');
+    if (/^[A-Za-z]:[\\/]/.test(path)) {
+      path = path.replace(/\//g, '\\');
+    } else {
+      path = '\\\\' + path.replace(/\//g, '\\');
     }
   }
 
-  return protocol + fileUrl;
-}
-
-function resolveUrl(x) {
-  let u = String(x.url_original || x.url || '').trim();
-  if (!u) return null;
-
-  if (/^https?:\/\//i.test(u)) return u;
-
-  // Para arquivos do Microsoft Office, usamos os protocolos oficiais do
-  // aplicativo. Isso evita que o Chrome tente carregar file:// como recurso
-  // local de uma página HTTPS.
-  const officeUrl = officeProtocolUrl(u);
-  if (officeUrl) return officeUrl;
-
-  if (/^[A-Za-z]:[\\/]/.test(u)) {
-    return 'file:///' + u.replace(/\\/g, '/');
+  // UNC: \\arquivos\ti\G_Xanxere_TI\...
+  if (/^\\\\/.test(path)) {
+    const fileUrl = 'file://' + path.replace(/^\\\\+/, '').replace(/\\/g, '/');
+    return protocol + fileUrl;
   }
 
-  if (/^\\\\/.test(u)) {
-    return 'file://' + u.replace(/^\\\\+/, '').replace(/\\/g, '/');
+  // Caminho local: C:\...
+  if (/^[A-Za-z]:[\\/]/.test(path)) {
+    const fileUrl = 'file:///' + path.replace(/\\/g, '/');
+    return protocol + fileUrl;
   }
 
-  if (/^file:\/\//i.test(u)) {
-    let rest = u.replace(/^file:\/+/i, '');
-    rest = rest.replace(/^\\\\+/, '').replace(/\\/g, '/');
-    if (/^[A-Za-z]:/.test(rest)) {
-      return 'file:///' + rest;
-    }
-    return 'file://' + rest.replace(/^\/+/, '');
-  }
-
+  // Caminho relativo: usa a configuração existente somente como fallback.
   const cfg = window.PORTAL_CONFIG || {};
   let root = String(cfg.networkRoot || '').trim();
-
   if (root) {
     root = root.replace(/\\/g, '/');
     if (!root.endsWith('/')) root += '/';
-    let cleanRel = u.replace(/\\/g, '/');
-    try {
-      return new URL(cleanRel, root).href;
-    } catch (e) {
-      return root + cleanRel.replace(/^\.\//, '');
-    }
+    const relative = path.replace(/\\/g, '/').replace(/^\.\//, '');
+    return protocol + 'file://' + (root + relative).replace(/^file:\/+/i, '').replace(/^\/+/, '');
   }
 
-  return u;
+  return null;
 }
 
 function openItem(x) {
-  const url = resolveUrl(x);
-  if (!url) {
+  const raw = String(x.url_original || x.url || '').trim();
+  if (!raw) {
     toast('Este atalho ainda precisa de uma URL HTTP/HTTPS ou caminho válido.');
     return;
   }
+
   const idStr = String(x.id);
   S.recent = [idStr, ...S.recent.filter(v => String(v) !== idStr)].slice(0, 8);
   saveLocal();
   renderQuick();
 
-  // O clique do usuário já ocorreu no evento do Portal. window.open permite
-  // que o Chrome peça confirmação para abrir o aplicativo Office quando
-  // necessário, como no teste manual com ms-excel:.
+  const url = resolveUrl(x);
+  if (!url) {
+    toast('Não foi possível resolver o caminho deste atalho.');
+    return;
+  }
+
+  if (/^https?:\/\//i.test(url)) {
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+
+  const officeUrl = officeProtocolUrl(url);
+  if (officeUrl) {
+    // Usa um link real para que o Chrome solicite a abertura do aplicativo Office.
+    const a = document.createElement('a');
+    a.href = officeUrl;
+    a.target = '_self';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 1000);
+    return;
+  }
+
+  // Outros arquivos/pastas: mantém o comportamento original.
   window.open(url, '_blank', 'noopener');
 }
 
