@@ -5,7 +5,10 @@ const A = {
   search: ''
 };
 
-const $ = s => document.querySelector(s);
+
+const $ = s =>
+  document.querySelector(s);
+
 
 const esc = x =>
   String(x ?? '').replace(
@@ -21,28 +24,113 @@ const esc = x =>
 
 
 /* ============================================================
+   ÍCONES ADMIN
+   ============================================================ */
+
+const ADMIN_ICONS = {
+
+  edit: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 20h4l10.8-10.8a2.1 2.1 0 0 0-3-3L5 17v3Z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+      <path
+        d="m14.5 7.5 2 2"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+      />
+    </svg>
+  `,
+
+  delete: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 7h14M9 7V4.5h6V7M7 7l.8 13h8.4L17 7"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M10 11v5M14 11v5"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
+    </svg>
+  `,
+
+  folder: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M3.5 7.5h7l1.8 2h8.2v9a2 2 0 0 1-2 2h-13
+        a2 2 0 0 1-2-2v-11Z"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linejoin="round"
+      />
+    </svg>
+  `
+
+};
+
+
+/* ============================================================
    TOAST
    ============================================================ */
 
 function toast(msg) {
 
-  const t = $('#toast');
+  const t =
+    $('#toast');
 
   if (!t) return;
 
-  t.textContent = msg;
 
-  t.hidden = false;
-  t.style.display = 'block';
+  t.textContent =
+    msg;
 
-  clearTimeout(window.__toast);
+  t.hidden =
+    false;
 
-  window.__toast = setTimeout(() => {
+  t.style.display =
+    'block';
 
-    t.hidden = true;
-    t.style.display = 'none';
 
-  }, 3500);
+  clearTimeout(
+    window.__toast
+  );
+
+
+  window.__toast =
+    setTimeout(
+      () => {
+
+        t.hidden =
+          true;
+
+        t.style.display =
+          'none';
+
+      },
+      3500
+    );
 
 }
 
@@ -53,8 +141,10 @@ function toast(msg) {
 
 function localMode() {
 
-  return !window.supabaseReady ||
-         !window.portalSupabase;
+  return (
+    !window.supabaseReady ||
+    !window.portalSupabase
+  );
 
 }
 
@@ -67,8 +157,11 @@ function hideModal(el) {
 
   if (!el) return;
 
-  el.hidden = true;
-  el.style.display = 'none';
+  el.hidden =
+    true;
+
+  el.style.display =
+    'none';
 
   el.setAttribute(
     'aria-hidden',
@@ -82,8 +175,11 @@ function showModal(el) {
 
   if (!el) return;
 
-  el.hidden = false;
-  el.style.display = 'flex';
+  el.hidden =
+    false;
+
+  el.style.display =
+    'flex';
 
   el.setAttribute(
     'aria-hidden',
@@ -95,8 +191,13 @@ function showModal(el) {
 
 function closeAllModals() {
 
-  hideModal($('#editor'));
-  hideModal($('#categoryModal'));
+  hideModal(
+    $('#editor')
+  );
+
+  hideModal(
+    $('#categoryModal')
+  );
 
 }
 
@@ -109,27 +210,45 @@ function showLogin() {
 
   closeAllModals();
 
-  const lp = $('#loginPanel');
-  const ap = $('#adminPanel');
+
+  const lp =
+    $('#loginPanel');
+
+  const ap =
+    $('#adminPanel');
+
 
   if (lp) {
 
-    lp.hidden = false;
-    lp.style.display = 'block';
+    lp.hidden =
+      false;
+
+    lp.style.display =
+      'block';
 
   }
+
 
   if (ap) {
 
-    ap.hidden = true;
-    ap.style.display = 'none';
+    ap.hidden =
+      true;
+
+    ap.style.display =
+      'none';
 
   }
 
-  const lo = $('#logout');
+
+  const lo =
+    $('#logout');
+
 
   if (lo) {
-    lo.hidden = true;
+
+    lo.hidden =
+      true;
+
   }
 
 }
@@ -139,128 +258,52 @@ function showAdmin() {
 
   closeAllModals();
 
-  const lp = $('#loginPanel');
-  const ap = $('#adminPanel');
+
+  const lp =
+    $('#loginPanel');
+
+  const ap =
+    $('#adminPanel');
+
 
   if (lp) {
 
-    lp.hidden = true;
-    lp.style.display = 'none';
+    lp.hidden =
+      true;
+
+    lp.style.display =
+      'none';
 
   }
+
 
   if (ap) {
 
-    ap.hidden = false;
-    ap.style.display = 'block';
+    ap.hidden =
+      false;
+
+    ap.style.display =
+      'block';
 
   }
 
-  const lo = $('#logout');
+
+  const lo =
+    $('#logout');
+
 
   if (lo) {
-    lo.hidden = false;
+
+    lo.hidden =
+      false;
+
   }
 
 }
 
 
 /* ============================================================
-   NORMALIZA CAMINHO DE PASTA
-   ============================================================ */
-
-function normalizeFolderPath(value) {
-
-  let path =
-    String(value || '').trim();
-
-  if (!path) return '';
-
-
-  /*
-    Remove aspas caso o caminho tenha
-    sido copiado entre aspas.
-  */
-
-  if (
-    (path.startsWith('"') &&
-     path.endsWith('"')) ||
-
-    (path.startsWith("'") &&
-     path.endsWith("'"))
-  ) {
-
-    path =
-      path.slice(1, -1).trim();
-
-  }
-
-
-  /*
-    Se já for file://,
-    mantém.
-  */
-
-  if (/^file:\/\//i.test(path)) {
-
-    return path
-      .replace(/\\/g, '/')
-      .replace(/\/+$/, '');
-
-  }
-
-
-  /*
-    Caminho UNC:
-
-    \\arquivos\ti\...
-  */
-
-  if (/^\\\\/.test(path)) {
-
-    return (
-      'file://' +
-      path
-        .replace(/^\\+/, '')
-        .replace(/\\/g, '/')
-        .replace(/\/+$/, '')
-    );
-
-  }
-
-
-  /*
-    Caminho local:
-
-    C:\Pasta
-  */
-
-  if (/^[A-Za-z]:[\\/]/.test(path)) {
-
-    return (
-      'file:///' +
-      path
-        .replace(/\\/g, '/')
-        .replace(/\/+$/, '')
-    );
-
-  }
-
-
-  /*
-    Caso o usuário tenha digitado
-    um caminho usando apenas barras.
-  */
-
-  return path
-    .replace(/\\/g, '/')
-    .replace(/\/+$/, '');
-
-}
-
-
-/* ============================================================
-   NORMALIZA URL
+   NORMALIZAÇÃO DE CAMINHO
    ============================================================ */
 
 function normalizeLinkUrl(value) {
@@ -268,19 +311,16 @@ function normalizeLinkUrl(value) {
   let url =
     String(value || '').trim();
 
-  if (!url) return '';
 
-
-  if (/^https?:\/\//i.test(url)) {
-    return url;
+  if (!url) {
+    return '';
   }
 
 
-  if (/^file:\/\//i.test(url)) {
-
-    return url
-      .replace(/\\/g, '/');
-
+  if (
+    /^https?:\/\//i.test(url)
+  ) {
+    return url;
   }
 
 
@@ -296,7 +336,9 @@ function normalizeLinkUrl(value) {
   }
 
 
-  if (/^[A-Za-z]:[\\/]/.test(url)) {
+  if (
+    /^[A-Za-z]:[\\/]/.test(url)
+  ) {
 
     return (
       'file:///' +
@@ -306,464 +348,16 @@ function normalizeLinkUrl(value) {
   }
 
 
+  if (
+    /^file:\/\//i.test(url)
+  ) {
+
+    return url;
+
+  }
+
+
   return url;
-
-}
-
-
-/* ============================================================
-   MONTA ENDEREÇO FINAL
-   ============================================================ */
-
-function buildFileUrl() {
-
-  const folder =
-    normalizeFolderPath(
-      $('#linkFolder')?.value
-    );
-
-  const fileName =
-    String(
-      $('#linkFileName')?.value || ''
-    ).trim();
-
-
-  if (!folder || !fileName) {
-
-    return '';
-
-  }
-
-
-  /*
-    Remove barras no final
-    e no início do nome do arquivo.
-  */
-
-  const cleanFolder =
-    folder.replace(/\/+$/, '');
-
-  const cleanFile =
-    fileName.replace(/^[/\\]+/, '');
-
-
-  /*
-    Se for uma URL web,
-    utiliza barra normal.
-  */
-
-  if (/^https?:\/\//i.test(cleanFolder)) {
-
-    return (
-      cleanFolder +
-      '/' +
-      cleanFile.replace(/\\/g, '/')
-    );
-
-  }
-
-
-  /*
-    Caminho file://
-  */
-
-  if (/^file:\/\//i.test(cleanFolder)) {
-
-    return (
-      cleanFolder +
-      '/' +
-      cleanFile.replace(/\\/g, '/')
-    );
-
-  }
-
-
-  return (
-    cleanFolder +
-    '/' +
-    cleanFile.replace(/\\/g, '/')
-  );
-
-}
-
-
-/* ============================================================
-   ATUALIZA ENDEREÇO GERADO
-   ============================================================ */
-
-function updateGeneratedUrl() {
-
-  const url =
-    buildFileUrl();
-
-  const input =
-    $('#linkUrl');
-
-  const hint =
-    $('#urlHint');
-
-  if (!input) return;
-
-
-  input.value = url;
-
-
-  if (!hint) return;
-
-
-  if (url) {
-
-    hint.textContent =
-      '✓ Endereço completo gerado automaticamente.';
-
-    hint.classList.remove(
-      'warning'
-    );
-
-    hint.classList.add(
-      'success'
-    );
-
-  } else {
-
-    hint.textContent =
-      'Informe o caminho da pasta e selecione o arquivo.';
-
-    hint.classList.remove(
-      'success'
-    );
-
-  }
-
-}
-
-
-/* ============================================================
-   ATUALIZA STATUS DA PASTA
-   ============================================================ */
-
-function updateFolderHint() {
-
-  const input =
-    $('#linkFolder');
-
-  const hint =
-    $('#folderHint');
-
-  if (!input || !hint) return;
-
-
-  const value =
-    input.value.trim();
-
-
-  hint.classList.remove(
-    'success',
-    'warning'
-  );
-
-
-  if (!value) {
-
-    hint.textContent =
-      'Copie no Windows Explorer o caminho da pasta onde está o arquivo.';
-
-    updateGeneratedUrl();
-
-    return;
-
-  }
-
-
-  if (
-    /^\\\\/.test(value) ||
-    /^file:\/\//i.test(value) ||
-    /^[A-Za-z]:[\\/]/.test(value)
-  ) {
-
-    hint.textContent =
-      '✓ Caminho de pasta reconhecido.';
-
-    hint.classList.add(
-      'success'
-    );
-
-  } else {
-
-    hint.textContent =
-      'Informe um caminho de rede como \\\\arquivos\\ti\\...';
-
-    hint.classList.add(
-      'warning'
-    );
-
-  }
-
-
-  updateGeneratedUrl();
-
-}
-
-
-/* ============================================================
-   COLAR CAMINHO DA PASTA
-   ============================================================ */
-
-async function pasteFolderPath() {
-
-  const input =
-    $('#linkFolder');
-
-  if (!input) return;
-
-
-  try {
-
-    if (
-      !navigator.clipboard ||
-      !navigator.clipboard.readText
-    ) {
-
-      toast(
-        'Cole o caminho manualmente usando Ctrl+V.'
-      );
-
-      input.focus();
-
-      return;
-
-    }
-
-
-    const text =
-      await navigator.clipboard.readText();
-
-
-    if (!text.trim()) {
-
-      toast(
-        'A área de transferência está vazia.'
-      );
-
-      return;
-
-    }
-
-
-    input.value =
-      normalizeFolderPath(text);
-
-
-    updateFolderHint();
-
-    input.focus();
-
-
-    input.setSelectionRange(
-      input.value.length,
-      input.value.length
-    );
-
-
-    toast(
-      'Caminho da pasta inserido.'
-    );
-
-
-  } catch (err) {
-
-    console.warn(
-      'Erro ao acessar clipboard:',
-      err
-    );
-
-
-    toast(
-      'O navegador bloqueou a área de transferência. Use Ctrl+V no campo.'
-    );
-
-
-    input.focus();
-
-  }
-
-}
-
-
-/* ============================================================
-   REMOVE EXTENSÃO DO NOME DO ARQUIVO
-   ============================================================ */
-
-function fileNameWithoutExtension(
-  fileName
-) {
-
-  const name =
-    String(fileName || '')
-      .trim();
-
-
-  if (!name) return '';
-
-
-  /*
-    Remove somente a última extensão.
-
-    Exemplo:
-
-    arquivo.xlsx
-    ->
-    arquivo
-
-    arquivo.backup.xlsx
-    ->
-    arquivo.backup
-  */
-
-  return name.replace(
-    /\.[^.]+$/,
-    ''
-  );
-
-}
-
-
-/* ============================================================
-   SELEÇÃO DO ARQUIVO
-   ============================================================ */
-
-function selectFile() {
-
-  const picker =
-    $('#filePicker');
-
-  if (!picker) return;
-
-  picker.click();
-
-}
-
-
-/* ============================================================
-   ARQUIVO SELECIONADO
-   ============================================================ */
-
-function handleFileSelected(
-  event
-) {
-
-  const file =
-    event.target.files?.[0];
-
-
-  if (!file) return;
-
-
-  /*
-    O navegador entrega o nome real do arquivo,
-    mesmo que esconda o caminho completo.
-  */
-
-  const fileNameInput =
-    $('#linkFileName');
-
-
-  if (fileNameInput) {
-
-    fileNameInput.value =
-      file.name;
-
-  }
-
-
-  /*
-    Preenche automaticamente o nome
-    do atalho, mas somente se:
-
-    - estiver vazio; ou
-    - o nome anterior tiver sido
-      gerado automaticamente.
-  */
-
-  const linkName =
-    $('#linkName');
-
-
-  const previousAutoName =
-    linkName?.dataset.autoName ||
-    '';
-
-
-  const generatedName =
-    fileNameWithoutExtension(
-      file.name
-    );
-
-
-  if (
-    linkName &&
-    (
-      !linkName.value.trim() ||
-      linkName.value.trim() === previousAutoName
-    )
-  ) {
-
-    linkName.value =
-      generatedName;
-
-    linkName.dataset.autoName =
-      generatedName;
-
-  }
-
-
-  /*
-    Informação visual.
-  */
-
-  const info =
-    $('#selectedFileInfo');
-
-
-  if (info) {
-
-    info.hidden = false;
-
-    info.textContent =
-      `✓ Arquivo selecionado: ${file.name}`;
-
-  }
-
-
-  const hint =
-    $('#fileHint');
-
-
-  if (hint) {
-
-    hint.textContent =
-      '✓ Arquivo selecionado. O nome foi preenchido automaticamente.';
-
-    hint.classList.remove(
-      'warning'
-    );
-
-    hint.classList.add(
-      'success'
-    );
-
-  }
-
-
-  updateGeneratedUrl();
-
-
-  /*
-    Limpa o input para permitir selecionar
-    novamente o mesmo arquivo.
-  */
-
-  event.target.value = '';
 
 }
 
@@ -804,7 +398,9 @@ function refreshLocal() {
     A.categories =
       savedCats;
 
-  } else if (localData?.categories) {
+  } else if (
+    localData?.categories
+  ) {
 
     A.categories =
       localData.categories.map(
@@ -820,8 +416,8 @@ function refreshLocal() {
 
           icon:
             typeof c === 'object'
-              ? c.icon || '📁'
-              : '📁',
+              ? c.icon || ''
+              : '',
 
           description:
             typeof c === 'object'
@@ -833,7 +429,8 @@ function refreshLocal() {
 
   } else {
 
-    A.categories = [];
+    A.categories =
+      [];
 
   }
 
@@ -843,7 +440,9 @@ function refreshLocal() {
     A.links =
       savedLinks;
 
-  } else if (localData?.links) {
+  } else if (
+    localData?.links
+  ) {
 
     A.links =
       localData.links.map(
@@ -856,7 +455,8 @@ function refreshLocal() {
               c =>
                 c.name ===
                 l.category
-            )?.id || '1',
+            )?.id ||
+            '1',
 
           category_name:
             l.category ||
@@ -879,12 +479,14 @@ function refreshLocal() {
 
   } else {
 
-    A.links = [];
+    A.links =
+      [];
 
   }
 
 
   renderCategories();
+
   renderLinks();
 
 }
@@ -905,7 +507,10 @@ async function refresh() {
   }
 
 
-  const [c, l] =
+  const [
+    c,
+    l
+  ] =
     await Promise.all([
 
       portalSupabase
@@ -923,7 +528,10 @@ async function refresh() {
     ]);
 
 
-  if (c.error || l.error) {
+  if (
+    c.error ||
+    l.error
+  ) {
 
     toast(
       c.error?.message ||
@@ -954,6 +562,7 @@ async function refresh() {
 
 
   renderCategories();
+
   renderLinks();
 
 }
@@ -968,6 +577,7 @@ function renderCategories() {
   const tbody =
     $('#categoryTableBody');
 
+
   if (!tbody) return;
 
 
@@ -975,16 +585,19 @@ function renderCategories() {
     A.categories.length === 0
   ) {
 
-    tbody.innerHTML =
-      `
+    tbody.innerHTML = `
       <tr>
         <td
           colspan="2"
-          style="text-align:center;padding:1.5rem;">
+          style="
+            text-align:center;
+            padding:1.5rem;
+          "
+        >
           Nenhuma categoria encontrada.
         </td>
       </tr>
-      `;
+    `;
 
     return;
 
@@ -992,24 +605,33 @@ function renderCategories() {
 
 
   tbody.innerHTML =
-    A.categories
-      .map(
-        c => `
+    A.categories.map(
+      c => `
 
         <tr>
 
           <td>
 
-            <strong>
-              ${esc(c.icon || '📁')}
+            <strong
+              class="admin-category-name"
+            >
+
+              <span
+                class="admin-category-icon"
+                aria-hidden="true"
+              >
+                ${ADMIN_ICONS.folder}
+              </span>
+
               ${esc(c.name)}
+
             </strong>
 
             ${
               c.description
                 ? `
                   <br>
-                  <small style="opacity:.7">
+                  <small>
                     ${esc(c.description)}
                   </small>
                 `
@@ -1020,25 +642,31 @@ function renderCategories() {
 
 
           <td
-            style="text-align:right;white-space:nowrap;">
+            style="
+              text-align:right;
+              white-space:nowrap;
+            "
+          >
 
             <button
               class="icon-btn"
               data-edit-cat="${esc(c.id)}"
-              title="Editar categoria">
-
-              ✏️
-
+              title="Editar categoria"
+              aria-label="Editar categoria"
+              type="button"
+            >
+              ${ADMIN_ICONS.edit}
             </button>
 
 
             <button
               class="icon-btn danger"
               data-delete-cat="${esc(c.id)}"
-              title="Excluir categoria">
-
-              🗑️
-
+              title="Excluir categoria"
+              aria-label="Excluir categoria"
+              type="button"
+            >
+              ${ADMIN_ICONS.delete}
             </button>
 
           </td>
@@ -1046,8 +674,7 @@ function renderCategories() {
         </tr>
 
       `
-      )
-      .join('');
+    ).join('');
 
 }
 
@@ -1061,6 +688,7 @@ function renderLinks() {
   const tbody =
     $('#linksTableBody');
 
+
   if (!tbody) return;
 
 
@@ -1071,33 +699,55 @@ function renderLinks() {
   if (A.search) {
 
     const q =
-      A.search.toLowerCase();
+      A.search.toLocaleLowerCase(
+        'pt-BR'
+      );
 
 
     filtered =
       filtered.filter(
         x =>
 
-          (x.name || '')
-            .toLowerCase()
+          (
+            x.name ||
+            ''
+          )
+            .toLocaleLowerCase(
+              'pt-BR'
+            )
             .includes(q)
 
           ||
 
-          (x.category_name || '')
-            .toLowerCase()
+          (
+            x.category_name ||
+            ''
+          )
+            .toLocaleLowerCase(
+              'pt-BR'
+            )
             .includes(q)
 
           ||
 
-          (x.description || '')
-            .toLowerCase()
+          (
+            x.description ||
+            ''
+          )
+            .toLocaleLowerCase(
+              'pt-BR'
+            )
             .includes(q)
 
           ||
 
-          (x.url || '')
-            .toLowerCase()
+          (
+            x.url ||
+            ''
+          )
+            .toLocaleLowerCase(
+              'pt-BR'
+            )
             .includes(q)
 
       );
@@ -1125,16 +775,19 @@ function renderLinks() {
     filtered.length === 0
   ) {
 
-    tbody.innerHTML =
-      `
+    tbody.innerHTML = `
       <tr>
         <td
           colspan="5"
-          style="text-align:center;padding:1.5rem;">
+          style="
+            text-align:center;
+            padding:1.5rem;
+          "
+        >
           Nenhum atalho encontrado.
         </td>
       </tr>
-      `;
+    `;
 
     return;
 
@@ -1142,9 +795,8 @@ function renderLinks() {
 
 
   tbody.innerHTML =
-    filtered
-      .map(
-        x => `
+    filtered.map(
+      x => `
 
         <tr>
 
@@ -1156,19 +808,27 @@ function renderLinks() {
 
 
           <td>
-            <span class="badge secondary">
+
+            <span
+              class="badge secondary"
+            >
               ${esc(x.category_name)}
             </span>
+
           </td>
 
 
           <td>
-            <span class="badge outline">
+
+            <span
+              class="badge outline"
+            >
               ${esc(
                 x.link_type ||
                 'internal'
               )}
             </span>
+
           </td>
 
 
@@ -1179,39 +839,44 @@ function renderLinks() {
                 x.active !== false
                   ? 'success'
                   : 'muted'
-              }">
-
+              }"
+            >
               ${
                 x.active !== false
                   ? 'Ativo'
                   : 'Inativo'
               }
-
             </span>
 
           </td>
 
 
           <td
-            style="text-align:right;white-space:nowrap;">
+            style="
+              text-align:right;
+              white-space:nowrap;
+            "
+          >
 
             <button
               class="icon-btn"
               data-edit="${esc(x.id)}"
-              title="Editar atalho">
-
-              ✏️
-
+              title="Editar atalho"
+              aria-label="Editar atalho"
+              type="button"
+            >
+              ${ADMIN_ICONS.edit}
             </button>
 
 
             <button
               class="icon-btn danger"
               data-delete="${esc(x.id)}"
-              title="Excluir atalho">
-
-              🗑️
-
+              title="Excluir atalho"
+              aria-label="Excluir atalho"
+              type="button"
+            >
+              ${ADMIN_ICONS.delete}
             </button>
 
           </td>
@@ -1219,22 +884,22 @@ function renderLinks() {
         </tr>
 
       `
-      )
-      .join('');
+    ).join('');
 
 }
 
 
 /* ============================================================
-   CATEGORIA DO LINK
+   DROPDOWN CATEGORIA
    ============================================================ */
 
 function populateCategoryDropdown(
-  selected
+  selectedCatIdOrName
 ) {
 
   const sel =
     $('#linkCategory');
+
 
   if (!sel) return;
 
@@ -1244,11 +909,7 @@ function populateCategoryDropdown(
   ) {
 
     sel.innerHTML =
-      `
-      <option value="">
-        Nenhuma categoria cadastrada
-      </option>
-      `;
+      '<option value="">Nenhuma categoria cadastrada</option>';
 
     return;
 
@@ -1256,48 +917,36 @@ function populateCategoryDropdown(
 
 
   sel.innerHTML =
-    A.categories
-      .map(
-        c => {
+    A.categories.map(
+      c => {
 
-          const selectedValue =
-            String(selected) ===
-              String(c.id) ||
+        const isSelected =
+          String(
+            selectedCatIdOrName
+          ) === String(c.id) ||
+          selectedCatIdOrName === c.name;
 
-            selected === c.name;
 
+        return `
+          <option
+            value="${esc(c.id)}"
+            ${isSelected ? 'selected' : ''}
+          >
+            ${esc(c.name)}
+          </option>
+        `;
 
-          return `
-
-            <option
-              value="${esc(c.id)}"
-              ${
-                selectedValue
-                  ? 'selected'
-                  : ''
-              }>
-
-              ${esc(c.icon || '📁')}
-              ${esc(c.name)}
-
-            </option>
-
-          `;
-
-        }
-      )
-      .join('');
+      }
+    ).join('');
 
 }
 
 
 /* ============================================================
-   ABRIR EDITOR
+   EDITOR DE ATALHO
    ============================================================ */
 
-function openEditor(
-  x = null
-) {
+function openEditor(x = null) {
 
   closeAllModals();
 
@@ -1306,13 +955,15 @@ function openEditor(
     x?.id || '';
 
 
-  $('#editorEyebrow').textContent =
+  $('#editorEyebrow')
+    .textContent =
     x
       ? 'EDITAR ATALHO'
       : 'NOVO ATALHO';
 
 
-  $('#editorTitle').textContent =
+  $('#editorTitle')
+    .textContent =
     x
       ? 'Editar atalho'
       : 'Cadastrar atalho';
@@ -1326,68 +977,9 @@ function openEditor(
     x?.description || '';
 
 
-  /*
-    Tenta separar a URL antiga em
-    pasta + nome do arquivo.
-  */
-
-  let folder = '';
-  let fileName = '';
-
-
-  const oldUrl =
-    String(
-      x?.url ||
-      x?.url_original ||
-      ''
-    ).trim();
-
-
-  if (oldUrl) {
-
-    const normalized =
-      oldUrl.replace(
-        /\\/g,
-        '/'
-      );
-
-
-    const lastSlash =
-      normalized.lastIndexOf('/');
-
-
-    if (lastSlash >= 0) {
-
-      folder =
-        normalized.substring(
-          0,
-          lastSlash
-        );
-
-      fileName =
-        normalized.substring(
-          lastSlash + 1
-        );
-
-    } else {
-
-      fileName =
-        normalized;
-
-    }
-
-  }
-
-
-  $('#linkFolder').value =
-    folder;
-
-
-  $('#linkFileName').value =
-    fileName;
-
-
-  $('#linkName').dataset.autoName =
+  $('#linkUrl').value =
+    x?.url ||
+    x?.url_original ||
     '';
 
 
@@ -1404,43 +996,10 @@ function openEditor(
     '';
 
 
-  const info =
-    $('#selectedFileInfo');
-
-
-  if (info) {
-
-    info.hidden = true;
-    info.textContent = '';
-
-  }
-
-
-  const fileHint =
-    $('#fileHint');
-
-
-  if (fileHint) {
-
-    fileHint.textContent =
-      'Selecione o arquivo no Windows. O nome será preenchido automaticamente.';
-
-    fileHint.classList.remove(
-      'success',
-      'warning'
-    );
-
-  }
-
-
   populateCategoryDropdown(
     x?.category_id ||
     x?.category
   );
-
-
-  updateFolderHint();
-  updateGeneratedUrl();
 
 
   showModal(
@@ -1449,10 +1008,6 @@ function openEditor(
 
 }
 
-
-/* ============================================================
-   FECHAR EDITOR
-   ============================================================ */
 
 function closeEditor() {
 
@@ -1466,13 +1021,6 @@ function closeEditor() {
 
   $('#formMsg').textContent =
     '';
-
-
-  $('#linkName').dataset.autoName =
-    '';
-
-
-  updateFolderHint();
 
 }
 
@@ -1488,26 +1036,41 @@ function openCategoryModal(
   closeAllModals();
 
 
-  $('#categoryModalTitle').textContent =
+  $('#categoryModalTitle')
+    .textContent =
     c
       ? 'Editar categoria'
       : 'Nova categoria';
 
 
   $('#editCategoryId').value =
-    c?.id || '';
+    c
+      ? c.id
+      : '';
 
 
   $('#categoryName').value =
-    c?.name || '';
+    c
+      ? c.name
+      : '';
 
 
   $('#categoryDescription').value =
-    c?.description || '';
+    c
+      ? (
+          c.description ||
+          ''
+        )
+      : '';
 
 
   $('#categoryIcon').value =
-    c?.icon || '📁';
+    c
+      ? (
+          c.icon ||
+          ''
+        )
+      : '';
 
 
   $('#categoryMsg').textContent =
@@ -1555,7 +1118,7 @@ async function loadAdmin() {
     if (info) {
 
       info.textContent =
-        'Modo Local (Gerenciamento no navegador / LocalStorage)';
+        'Modo Local — gerenciamento no navegador';
 
     }
 
@@ -1613,12 +1176,13 @@ async function loadAdmin() {
 
 
 /* ============================================================
-   EVENTOS
+   EVENTOS DOS MODAIS
    ============================================================ */
 
 $('#newLink')?.addEventListener(
   'click',
-  () => openEditor()
+  () =>
+    openEditor()
 );
 
 
@@ -1634,75 +1198,10 @@ $('#cancelEditor')?.addEventListener(
 );
 
 
-$('#pasteFolder')?.addEventListener(
-  'click',
-  pasteFolderPath
-);
-
-
-$('#selectFile')?.addEventListener(
-  'click',
-  selectFile
-);
-
-
-$('#filePicker')?.addEventListener(
-  'change',
-  handleFileSelected
-);
-
-
-$('#linkFolder')?.addEventListener(
-  'input',
-  updateFolderHint
-);
-
-
-$('#linkFileName')?.addEventListener(
-  'input',
-  updateGeneratedUrl
-);
-
-
-$('#linkName')?.addEventListener(
-  'input',
-  () => {
-
-    /*
-      Se o usuário alterar manualmente
-      o nome, deixamos de considerar
-      que ele foi preenchido
-      automaticamente.
-    */
-
-    const input =
-      $('#linkName');
-
-    if (input) {
-
-      const auto =
-        input.dataset.autoName ||
-        '';
-
-
-      if (
-        input.value.trim() !== auto
-      ) {
-
-        input.dataset.autoName =
-          '';
-
-      }
-
-    }
-
-  }
-);
-
-
 $('#newCategory')?.addEventListener(
   'click',
-  () => openCategoryModal()
+  () =>
+    openCategoryModal()
 );
 
 
@@ -1719,7 +1218,7 @@ $('#cancelCategory')?.addEventListener(
 
 
 /* ============================================================
-   FECHAR MODAL
+   FECHAR MODAL NO BACKDROP
    ============================================================ */
 
 document
@@ -1746,6 +1245,10 @@ document
   );
 
 
+/* ============================================================
+   ESC
+   ============================================================ */
+
 document.addEventListener(
   'keydown',
   e => {
@@ -1763,7 +1266,7 @@ document.addEventListener(
 
 
 /* ============================================================
-   PESQUISA
+   PESQUISA ADMIN
    ============================================================ */
 
 $('#adminSearch')?.addEventListener(
@@ -1806,38 +1309,6 @@ $('#linkForm')?.addEventListener(
       );
 
 
-    /*
-      Gera novamente o endereço
-      para garantir que o valor
-      salvo esteja atualizado.
-    */
-
-    const generatedUrl =
-      buildFileUrl();
-
-
-    /*
-      Se o usuário estiver editando
-      um link web antigo, preserva
-      o valor do campo URL caso
-      não haja pasta/arquivo.
-    */
-
-    let finalUrl =
-      generatedUrl;
-
-
-    if (!finalUrl) {
-
-      finalUrl =
-        String(
-          $('#linkUrl').value ||
-          ''
-        ).trim();
-
-    }
-
-
     const payload = {
 
       name:
@@ -1855,14 +1326,17 @@ $('#linkForm')?.addEventListener(
 
       url:
         normalizeLinkUrl(
-          finalUrl
+          $('#linkUrl')
+            .value
         ),
 
       link_type:
-        $('#linkType').value,
+        $('#linkType')
+          .value,
 
       active:
-        $('#linkActive').checked
+        $('#linkActive')
+          .checked
 
     };
 
@@ -1872,17 +1346,14 @@ $('#linkForm')?.addEventListener(
       !payload.url
     ) {
 
-      $('#formMsg').textContent =
-        'Preencha o nome, caminho da pasta e selecione o arquivo.';
+      $('#formMsg')
+        .textContent =
+        'Preencha os campos obrigatórios (Nome e URL).';
 
       return;
 
     }
 
-
-    /* ========================================================
-       MODO LOCAL
-       ======================================================== */
 
     if (localMode()) {
 
@@ -1921,10 +1392,8 @@ $('#linkForm')?.addEventListener(
         payload.id =
           String(Date.now());
 
-
         payload.url_original =
           payload.url;
-
 
         payload.category_name =
           catObj
@@ -1951,22 +1420,18 @@ $('#linkForm')?.addEventListener(
 
       refreshLocal();
 
-
       toast(
-        'Salvo no navegador (Modo Local).'
+        'Atalho salvo no navegador.'
       );
-
 
       return;
 
     }
 
 
-    /* ========================================================
-       SUPABASE
-       ======================================================== */
-
-    const { error } =
+    const {
+      error
+    } =
       id
 
         ? await portalSupabase
@@ -1983,7 +1448,8 @@ $('#linkForm')?.addEventListener(
 
     if (error) {
 
-      $('#formMsg').textContent =
+      $('#formMsg')
+        .textContent =
         error.message;
 
     } else {
@@ -2014,7 +1480,8 @@ $('#categoryForm')?.addEventListener(
 
 
     const id =
-      $('#editCategoryId').value;
+      $('#editCategoryId')
+        .value;
 
 
     const payload = {
@@ -2030,17 +1497,15 @@ $('#categoryForm')?.addEventListener(
           .trim(),
 
       icon:
-        $('#categoryIcon')
-          .value
-          .trim() ||
-        '📁'
+        ''
 
     };
 
 
     if (!payload.name) {
 
-      $('#categoryMsg').textContent =
+      $('#categoryMsg')
+        .textContent =
         'O nome da categoria é obrigatório.';
 
       return;
@@ -2096,18 +1561,18 @@ $('#categoryForm')?.addEventListener(
 
       refreshLocal();
 
-
       toast(
-        'Categoria salva (Modo Local).'
+        'Categoria salva.'
       );
-
 
       return;
 
     }
 
 
-    const { error } =
+    const {
+      error
+    } =
       id
 
         ? await portalSupabase
@@ -2124,7 +1589,8 @@ $('#categoryForm')?.addEventListener(
 
     if (error) {
 
-      $('#categoryMsg').textContent =
+      $('#categoryMsg')
+        .textContent =
         error.message;
 
     } else {
@@ -2144,12 +1610,16 @@ $('#categoryForm')?.addEventListener(
 
 
 /* ============================================================
-   EDIÇÃO / EXCLUSÃO
+   DELEGAÇÃO DE EVENTOS
    ============================================================ */
 
 document.addEventListener(
   'click',
   async e => {
+
+    /* --------------------------------------------------------
+       EDITAR ATALHO
+       -------------------------------------------------------- */
 
     const ed =
       e.target.closest(
@@ -2173,6 +1643,10 @@ document.addEventListener(
 
     }
 
+
+    /* --------------------------------------------------------
+       EXCLUIR ATALHO
+       -------------------------------------------------------- */
 
     const del =
       e.target.closest(
@@ -2212,15 +1686,15 @@ document.addEventListener(
 
           refreshLocal();
 
-
           toast(
-            'Excluído (Modo Local).'
+            'Atalho excluído.'
           );
-
 
         } else {
 
-          const { error } =
+          const {
+            error
+          } =
             await portalSupabase
               .from('links')
               .delete()
@@ -2252,6 +1726,10 @@ document.addEventListener(
     }
 
 
+    /* --------------------------------------------------------
+       EDITAR CATEGORIA
+       -------------------------------------------------------- */
+
     const edCat =
       e.target.closest(
         '[data-edit-cat]'
@@ -2275,6 +1753,10 @@ document.addEventListener(
     }
 
 
+    /* --------------------------------------------------------
+       EXCLUIR CATEGORIA
+       -------------------------------------------------------- */
+
     const delCat =
       e.target.closest(
         '[data-delete-cat]'
@@ -2294,9 +1776,7 @@ document.addEventListener(
         A.links.some(
           x =>
             String(x.category_id) ===
-              String(catId)
-
-            ||
+              String(catId) ||
 
             String(x.category) ===
               String(catId)
@@ -2340,22 +1820,19 @@ document.addEventListener(
 
           refreshLocal();
 
-
           toast(
-            'Categoria excluída (Modo Local).'
+            'Categoria excluída.'
           );
-
 
         } else {
 
-          const { error } =
+          const {
+            error
+          } =
             await portalSupabase
               .from('categories')
               .delete()
-              .eq(
-                'id',
-                catId
-              );
+              .eq('id', catId);
 
 
           if (error) {
@@ -2403,7 +1880,6 @@ $('#loginForm')?.addEventListener(
         'Supabase não configurado. Operando em Modo Local.'
       );
 
-
       loadAdmin();
 
       return;
@@ -2419,19 +1895,20 @@ $('#loginForm')?.addEventListener(
       $('#password').value;
 
 
-    const { error } =
+    const {
+      error
+    } =
       await portalSupabase.auth
         .signInWithPassword({
-
           email,
           password
-
         });
 
 
     if (error) {
 
-      $('#loginMsg').textContent =
+      $('#loginMsg')
+        .textContent =
         error.message;
 
     } else {
@@ -2457,12 +1934,16 @@ $('#logout')?.addEventListener(
       window.portalSupabase
     ) {
 
-      await portalSupabase.auth.signOut();
+      await portalSupabase
+        .auth
+        .signOut();
 
     }
 
 
-    A.user = null;
+    A.user =
+      null;
+
 
     showLogin();
 
@@ -2479,7 +1960,8 @@ $('#theme')?.addEventListener(
   () => {
 
     const isDark =
-      document.documentElement.dataset.theme ===
+      document.documentElement
+        .dataset.theme ===
       'dark';
 
 
@@ -2489,7 +1971,8 @@ $('#theme')?.addEventListener(
         : 'dark';
 
 
-    document.documentElement.dataset.theme =
+    document.documentElement
+      .dataset.theme =
       newTheme;
 
 
@@ -2516,7 +1999,8 @@ $('#theme')?.addEventListener(
 
   if (savedTheme) {
 
-    document.documentElement.dataset.theme =
+    document.documentElement
+      .dataset.theme =
       savedTheme;
 
   }
@@ -2529,13 +2013,12 @@ $('#theme')?.addEventListener(
   } catch (err) {
 
     console.error(
-      'Erro na inicialização:',
+      'Erro ao carregar administração:',
       err
     );
 
-
     toast(
-      'Não foi possível carregar a administração. Verifique o console do navegador.'
+      'Não foi possível carregar a administração.'
     );
 
   }
