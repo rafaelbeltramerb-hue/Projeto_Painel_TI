@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="theme-color" content="#f6f8fc">
+  <meta
+    name="description"
+    content="Portal TI — Xanxerê"
+  >
+
+  <title>Portal TI — Xanxerê</title>
+
+  <link
+    rel="icon"
+    href="assets/favicon.svg"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+</head>
+
+<body>
+
+  <div class="shell">
+
+    <!-- ======================================================
+         TOPO
+         ====================================================== -->
+
+    <header class="top">
+
+      <div class="brand">
+
+        <div class="logo">
+          TI
+        </div>
+
+        <div>
+          <b>Portal TI</b>
+          <small>Xanxerê</small>
+        </div>
+
+      </div>
+
+
+      <nav class="top-actions">
+
+        <!-- PESQUISA -->
+
+        <div class="top-search">
+
+          <span
+            class="top-search-icon"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="10.8"
+                cy="10.8"
+                r="6.5"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+
+              <path
+                d="M16 16L20.5 20.5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+
+          <input
+            id="q"
+            type="search"
+            placeholder="Pesquisar atalhos..."
+            autocomplete="off"
+            aria-label="Pesquisar atalhos"
+          >
+
+          <button
+            id="clear"
+            type="button"
+            aria-label="Limpar pesquisa"
+            title="Limpar pesquisa"
+          >
+            ×
+          </button>
+
+        </div>
+
+
+        <!-- TEMA -->
+
+        <button
+          id="theme"
+          class="tool tool-icon"
+          type="button"
+          title="Alterar tema"
+          aria-label="Alterar tema"
+        >
+
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="4"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+
+            <path
+              d="M12 2.5V4"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M12 20V21.5"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M2.5 12H4"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M20 12H21.5"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M5.3 5.3L6.4 6.4"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M17.6 17.6L18.7 18.7"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M18.7 5.3L17.6 6.4"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M6.4 17.6L5.3 18.7"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+          </svg>
+
+        </button>
+
+
+        <!-- ADMINISTRAÇÃO -->
+
+        <a
+          class="tool admin-link"
+          href="admin.html"
+          title="Administração do Portal TI"
+        >
+
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3.5L14 5.2L16.6 5.1L17.5 7.5L19.6 9L18.8 11.5L19.6 14L17.5 15.5L16.6 17.9L14 17.8L12 19.5L10 17.8L7.4 17.9L6.5 15.5L4.4 14L5.2 11.5L4.4 9L6.5 7.5L7.4 5.1L10 5.2L12 3.5Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+
+            <circle
+              cx="12"
+              cy="11.5"
+              r="2.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+
+          <span>Administração</span>
+
+        </a>
+
+      </nav>
+
+    </header>
+
+
+    <main>
+
+      <!-- ====================================================
+           HERO
+           ==================================================== -->
+
+      <section class="hero">
+
+        <div>
+
+          <span>PAINEL DE CONTROLE</span>
+
+          <h1>
+            Acesso aos arquivos e pastas mais utilizados
+          </h1>
+
+          <p>
+            Central de acesso rápido aos documentos,
+            pastas e recursos usados diariamente pela TI.
+          </p>
+
+        </div>
+
+
+        <div class="hero-actions">
+
+          <button
+            id="favoritesBtn"
+            type="button"
+          >
+            Favoritos
+          </button>
+
+          <button
+            id="recentBtn"
+            type="button"
+          >
+            Recentes
+          </button>
+
+          <button
+            id="allBtn"
+            type="button"
+          >
+            Todos
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ====================================================
+           ÁREA ANTIGA DE PESQUISA
+           ====================================================
+
+           A pesquisa agora fica no topo.
+           Mantemos esta seção escondida para compatibilidade.
+      -->
+
+      <section
+        class="search legacy-search"
+        aria-hidden="true"
+      >
+
+        <span></span>
+
+        <input
+          id="q-legacy"
+          type="text"
+          tabindex="-1"
+        >
+
+        <button
+          type="button"
+          tabindex="-1"
+        >
+          ×
+        </button>
+
+      </section>
+
+
+      <!-- ====================================================
+           ACESSO RÁPIDO
+           ==================================================== -->
+
+      <section class="quick">
+
+        <div class="heading">
+
+          <div>
+
+            <span>ACESSO RÁPIDO</span>
+
+            <h2>
+              Mais utilizados
+            </h2>
+
+          </div>
+
+          <small id="quickHint">
+            Favoritos e acessos recentes
+          </small>
+
+        </div>
+
+        <div
+          id="quickGrid"
+          class="grid"
+        ></div>
+
+      </section>
+
+
+      <!-- ====================================================
+           FILTROS
+           ==================================================== -->
+
+      <section class="content-section">
+
+        <div class="heading">
+
+          <div>
+
+            <span>FILTROS</span>
+
+            <h2 id="sectionTitle">
+              Todos os atalhos
+            </h2>
+
+          </div>
+
+          <em id="count"></em>
+
+        </div>
+
+
+        <div
+          id="chips"
+          class="chips"
+        ></div>
+
+
+        <div
+          id="grid"
+          class="grid"
+        ></div>
+
+
+        <div
+          id="empty"
+          class="empty"
+          hidden
+        >
+
+          <strong>
+            Nenhum resultado encontrado
+          </strong>
+
+          <p>
+            Tente outro termo ou limpe os filtros.
+          </p>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- ======================================================
+         RODAPÉ
+         ====================================================== -->
+
+    <footer>
+
+      <span>
+        Portal TI — Xanxerê
+      </span>
+
+      <span id="footerInfo">
+        30 atalhos · 11 categorias
+      </span>
+
+    </footer>
+
+  </div>
+
+
+  <div
+    id="toast"
+    class="toast"
+    hidden
+  ></div>
+
+
+  <!-- ========================================================
+       SCRIPTS
+       ======================================================== -->
+
+  <script src="js/data.js"></script>
+
+  <script src="js/supabase-config.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="js/supabase-client.js"></script>
+
+  <script src="js/app.js"></script>
+
+</body>
+</html>
