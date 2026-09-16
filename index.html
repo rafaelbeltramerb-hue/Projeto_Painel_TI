@@ -16,7 +16,7 @@
       <li><a href="#locais">Locais Atendidos</a></li>
       <li><a href="#wifi">Configurar Wi-Fi</a></li>
       <li><a href="#contato">Contato</a></li>
-      <li><a href="#login" class="btn-login">Área Restrita</a></li>
+      <li><a href="login.html" class="btn-login">Área Restrita</a></li>
     </ul>
   </nav>
 
@@ -29,14 +29,15 @@
 
   <!-- Seção História -->
   <section id="historia" class="section container">
-    <h2>Nossa História no Campus</h2>
-    <p>Desde a consolidação do Campus Xanxerê, a equipe de TI tem atuado na expansão da infraestrutura de rede, modernização de laboratórios e suporte a alunos e servidores. Nosso compromisso é manter os serviços acadêmicos e administrativos sempre ativos e seguros.</p>
+    <h2 id="historiaTitle">Nossa História no Campus</h2>
+    <img id="historiaImg" class="content-img" alt="" hidden>
+    <p id="historiaBody">Desde a consolidação do Campus Xanxerê, a equipe de TI tem atuado na expansão da infraestrutura de rede, modernização de laboratórios e suporte a alunos e servidores. Nosso compromisso é manter os serviços acadêmicos e administrativos sempre ativos e seguros.</p>
   </section>
 
   <!-- Seção Locais Atendidos -->
   <section id="locais" class="section container bg-light">
-    <h2>Locais Atendidos</h2>
-    <div class="grid-cards">
+    <h2 id="locaisTitle">Locais Atendidos</h2>
+    <div class="grid-cards" id="locaisGrid">
       <div class="card">
         <h3>Bloco Administrativo</h3>
         <p>Suporte presencial e de rede às secretarias, direções e gabinetes.</p>
@@ -58,8 +59,9 @@
 
   <!-- Seção Configuração Wi-Fi -->
   <section id="wifi" class="section container">
-    <h2>Como Configurar o Wi-Fi (Eduroam)</h2>
-    <div class="steps-grid">
+    <h2 id="wifiTitle">Como Configurar o Wi-Fi (Eduroam)</h2>
+    <p id="wifiBody"></p>
+    <div class="steps-grid" id="wifiGrid">
       <div class="step">
         <span class="step-num">1</span>
         <h4>Conecte-se à rede</h4>
@@ -78,30 +80,28 @@
     </div>
   </section>
 
-  <!-- Form / Modal de Login -->
-  <section id="login" class="section container bg-light">
-    <div class="login-box">
-      <h2>Acesso ao Portal Interno</h2>
-      <form onsubmit="realizarLogin(event)">
-        <div class="form-group">
-          <label for="usuario">Usuário / E-mail</label>
-          <input type="text" id="usuario" required placeholder="Digite seu usuário">
-        </div>
-        <div class="form-group">
-          <label for="senha">Senha</label>
-          <input type="password" id="senha" required placeholder="Digite sua senha">
-        </div>
-        <button type="submit" class="btn-submit">Entrar no Painel</button>
-      </form>
+  <!-- Seção Contato -->
+  <section id="contato" class="section container">
+    <h2 id="contatoTitle">Contato</h2>
+    <div class="grid-cards" id="contatoGrid">
+      <div class="card">
+        <h3>WhatsApp</h3>
+        <p><a href="https://wa.me/554934417020" target="_blank">(49) 3441-7020</a></p>
+      </div>
+      <div class="card">
+        <h3>E-mail</h3>
+        <p><a href="mailto:ti.xanxere@unoesc.edu.br">ti.xanxere@unoesc.edu.br</a></p>
+      </div>
+      <div class="card">
+        <h3>Horário de Atendimento</h3>
+        <p>Segunda a sexta, das 7h30 às 21h30.</p>
+      </div>
     </div>
   </section>
 
-  <script>
-    function realizarLogin(event) {
-      event.preventDefault();
-      // Redireciona para o portal interno pós-login
-      window.location.href = 'dashboard.html';
-    }
-  </script>
+  <script src="js/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/site-content.js"></script>
 </body>
 </html>

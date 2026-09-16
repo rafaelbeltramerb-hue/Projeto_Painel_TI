@@ -227,7 +227,12 @@
 
         </div>
 
+        <div class="admin-tabs" id="adminTabs">
+          <button type="button" class="admin-tab active" data-tab="atalhos">Atalhos</button>
+          <button type="button" class="admin-tab" data-tab="conteudo">Conteúdo do Site</button>
+        </div>
 
+        <div id="tabAtalhos" class="admin-tabpanel">
         <div class="admin-grid">
 
 
@@ -358,11 +363,173 @@
           </section>
 
         </div>
+        </div>
+        <!-- /tabAtalhos -->
+
+        <!-- =================================================
+             CONTEÚDO DO SITE
+             ================================================= -->
+
+        <div id="tabConteudo" class="admin-tabpanel" hidden>
+
+          <div class="content-subtabs" id="contentSubtabs">
+            <button type="button" class="admin-tab active" data-sub="historia">História</button>
+            <button type="button" class="admin-tab" data-sub="locais">Locais Atendidos</button>
+            <button type="button" class="admin-tab" data-sub="wifi">Configurar Wi-Fi</button>
+            <button type="button" class="admin-tab" data-sub="contato">Contato</button>
+          </div>
+
+          <!-- HISTÓRIA -->
+          <section class="panel content-pane" id="paneHistoria">
+            <h2>Nossa História no Campus</h2>
+            <p>Texto exibido na seção "História" do site público.</p>
+
+            <form id="historiaForm">
+              <label>
+                Título
+                <input id="historiaTitleInput" placeholder="Nossa História no Campus">
+              </label>
+
+              <label>
+                Texto
+                <textarea id="historiaBodyInput" rows="6" placeholder="Texto da seção..."></textarea>
+              </label>
+
+              <label>
+                Imagem (opcional)
+                <input id="historiaImageInput" type="file" accept="image/*">
+              </label>
+
+              <div id="historiaImagePreviewWrap" class="image-preview-wrap" hidden>
+                <img id="historiaImagePreview" class="image-preview" alt="Pré-visualização">
+                <button type="button" id="historiaImageRemove" class="icon-btn danger" title="Remover imagem">×</button>
+              </div>
+
+              <button class="primary" type="submit">Salvar História</button>
+              <div id="historiaMsg" class="form-msg"></div>
+            </form>
+          </section>
+
+          <!-- LOCAIS ATENDIDOS -->
+          <section class="panel content-pane" id="paneLocais" hidden>
+            <div class="admin-toolbar">
+              <div>
+                <h2>Locais Atendidos</h2>
+                <small>Cartões exibidos na seção "Locais Atendidos"</small>
+              </div>
+              <button type="button" id="newLocal" class="secondary">+ Novo local</button>
+            </div>
+
+            <div id="locaisList" class="card-admin-list"></div>
+          </section>
+
+          <!-- WI-FI -->
+          <section class="panel content-pane" id="paneWifi" hidden>
+            <h2>Como Configurar o Wi-Fi</h2>
+
+            <form id="wifiIntroForm">
+              <label>
+                Título
+                <input id="wifiTitleInput" placeholder="Como Configurar o Wi-Fi (Eduroam)">
+              </label>
+
+              <label>
+                Texto introdutório (opcional)
+                <textarea id="wifiBodyInput" rows="3" placeholder="Texto introdutório antes dos passos..."></textarea>
+              </label>
+
+              <button class="primary" type="submit">Salvar título/introdução</button>
+              <div id="wifiIntroMsg" class="form-msg"></div>
+            </form>
+
+            <div class="admin-toolbar" style="margin-top:16px;">
+              <div>
+                <h2>Passos</h2>
+                <small>Passos numerados exibidos na seção Wi-Fi</small>
+              </div>
+              <button type="button" id="newWifiStep" class="secondary">+ Novo passo</button>
+            </div>
+
+            <div id="wifiStepsList" class="card-admin-list"></div>
+          </section>
+
+          <!-- CONTATO -->
+          <section class="panel content-pane" id="paneContato" hidden>
+            <h2>Contato</h2>
+            <p>Texto exibido na seção "Contato" do site público (WhatsApp, e-mail, horário, etc.).</p>
+
+            <form id="contatoForm">
+              <label>
+                Título
+                <input id="contatoTitleInput" placeholder="Contato">
+              </label>
+
+              <label>
+                Texto / Informações
+                <textarea id="contatoBodyInput" rows="6" placeholder="WhatsApp, e-mail, endereço, horário..."></textarea>
+              </label>
+
+              <button class="primary" type="submit">Salvar Contato</button>
+              <div id="contatoMsg" class="form-msg"></div>
+            </form>
+          </section>
+
+        </div>
+        <!-- /tabConteudo -->
 
       </section>
 
     </main>
 
+  </div>
+
+
+  <!-- =========================================================
+       MODAL — CARTÃO DE CONTEÚDO (Local / Passo Wi-Fi)
+       ========================================================= -->
+
+  <div id="cardEditor" class="modal" hidden style="display:none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <span id="cardEditorEyebrow">NOVO CARTÃO</span>
+          <h2 id="cardEditorTitle">Cadastrar</h2>
+        </div>
+        <button id="closeCardEditor" class="close" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="cardForm">
+        <input id="cardEditId" type="hidden">
+        <input id="cardSection" type="hidden">
+
+        <label>
+          Título
+          <input id="cardTitle" required placeholder="Ex.: Biblioteca">
+        </label>
+
+        <label>
+          Descrição
+          <textarea id="cardDescription" rows="3" placeholder="Descrição exibida no cartão"></textarea>
+        </label>
+
+        <label>
+          Imagem (opcional)
+          <input id="cardImageInput" type="file" accept="image/*">
+        </label>
+
+        <div id="cardImagePreviewWrap" class="image-preview-wrap" hidden>
+          <img id="cardImagePreview" class="image-preview" alt="Pré-visualização">
+          <button type="button" id="cardImageRemove" class="icon-btn danger" title="Remover imagem">×</button>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelCard" class="secondary">Cancelar</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="cardMsg" class="form-msg"></div>
+      </form>
+    </div>
   </div>
 
 
@@ -799,6 +966,8 @@
   <script src="js/supabase-client.js"></script>
 
   <script src="js/admin.js"></script>
+
+  <script src="js/admin-content.js"></script>
 
 </body>
 </html>

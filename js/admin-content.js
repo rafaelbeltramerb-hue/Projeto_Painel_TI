@@ -1,0 +1,491 @@
+/* ============================================================
+   CONTEÚDO DO SITE — Administração
+   (História, Locais Atendidos, Configurar Wi-Fi, Contato)
+
+   Usa as mesmas tabelas/convenções do restante do admin.js:
+   - localMode() decide entre Supabase e localStorage
+   - toast() para feedback
+   - $()/esc() helpers já definidos em admin.js
+   ============================================================ */
+
+const CONTENT_DEFAULTS = {
+  historia: {
+    title: 'Nossa História no Campus',
+    body: 'Desde a consolidação do Campus Xanxerê, a equipe de TI tem atuado na expansão da infraestrutura de rede, modernização de laboratórios e suporte a alunos e servidores. Nosso compromisso é manter os serviços acadêmicos e administrativos sempre ativos e seguros.',
+    image_url: ''
+  },
+  wifi_intro: {
+    title: 'Como Configurar o Wi-Fi (Eduroam)',
+    body: '',
+    image_url: ''
+  },
+  contato: {
+    title: 'Contato',
+    body: 'WhatsApp: (49) 3441-7020\nE-mail: ti.xanxere@unoesc.edu.br\nHorário: Segunda a sexta, das 7h30 às 21h30.',
+    image_url: ''
+  }
+};
+
+const SLUG_TO_PREFIX = { historia: 'historia', wifi_intro: 'wifi', contato: 'contato' };
+
+const CC = {
+  content: {},
+  cards: { locais: [], wifi_steps: [] },
+  pendingFile: { historia: null, wifi: null, contato: null, card: null }
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadSiteImage(file, folder) {
+  if (!file) return null;
+
+  if (localMode()) {
+    return await fileToDataUrl(file);
+  }
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${folder}/${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
+
+  const { error } = await portalSupabase.storage
+    .from('site-images')
+    .upload(path, file, { upsert: true, cacheControl: '3600' });
+
+  if (error) {
+    toast('Erro ao enviar imagem: ' + error.message);
+    return null;
+  }
+
+  const { data } = portalSupabase.storage.from('site-images').getPublicUrl(path);
+  return data?.publicUrl || null;
+}
+
+/* ============================================================
+   ABAS — Atalhos / Conteúdo do Site
+   ============================================================ */
+
+$('#adminTabs')?.addEventListener('click', (event) => {
+  const btn = event.target.closest('.admin-tab');
+  if (!btn) return;
+
+  document.querySelectorAll('#adminTabs .admin-tab').forEach(b => b.classList.toggle('active', b === btn));
+
+  const tab = btn.dataset.tab;
+  $('#tabAtalhos').hidden = tab !== 'atalhos';
+  $('#tabConteudo').hidden = tab !== 'conteudo';
+
+  const newLinkBtn = $('#newLink');
+  if (newLinkBtn) newLinkBtn.style.display = tab === 'atalhos' ? '' : 'none';
+
+  if (tab === 'conteudo') loadSiteContent();
+});
+
+$('#contentSubtabs')?.addEventListener('click', (event) => {
+  const btn = event.target.closest('.admin-tab');
+  if (!btn) return;
+
+  document.querySelectorAll('#contentSubtabs .admin-tab').forEach(b => b.classList.toggle('active', b === btn));
+
+  const sub = btn.dataset.sub;
+  $('#paneHistoria').hidden = sub !== 'historia';
+  $('#paneLocais').hidden = sub !== 'locais';
+  $('#paneWifi').hidden = sub !== 'wifi';
+  $('#paneContato').hidden = sub !== 'contato';
+});
+
+/* ============================================================
+   CARREGAR CONTEÚDO
+   ============================================================ */
+
+async function loadSiteContent() {
+  if (localMode()) {
+    CC.content.historia = JSON.parse(localStorage.getItem('pti_content_historia') || 'null') || { ...CONTENT_DEFAULTS.historia };
+    CC.content.wifi_intro = JSON.parse(localStorage.getItem('pti_content_wifi') || 'null') || { ...CONTENT_DEFAULTS.wifi_intro };
+    CC.content.contato = JSON.parse(localStorage.getItem('pti_content_contato') || 'null') || { ...CONTENT_DEFAULTS.contato };
+    CC.cards.locais = JSON.parse(localStorage.getItem('pti_cards_locais') || '[]');
+    CC.cards.wifi_steps = JSON.parse(localStorage.getItem('pti_cards_wifi_steps') || '[]');
+  } else {
+    try {
+      const { data: rows } = await portalSupabase.from('site_content').select('*');
+      CC.content.historia = rows?.find(r => r.slug === 'historia') || { ...CONTENT_DEFAULTS.historia };
+      CC.content.wifi_intro = rows?.find(r => r.slug === 'wifi_intro') || { ...CONTENT_DEFAULTS.wifi_intro };
+      CC.content.contato = rows?.find(r => r.slug === 'contato') || { ...CONTENT_DEFAULTS.contato };
+
+      const { data: cards } = await portalSupabase.from('site_cards').select('*').order('sort_order');
+      CC.cards.locais = (cards || []).filter(c => c.section === 'locais');
+      CC.cards.wifi_steps = (cards || []).filter(c => c.section === 'wifi_steps');
+    } catch (err) {
+      console.error(err);
+      toast('Não foi possível carregar o conteúdo do site (verifique se as tabelas site_content/site_cards existem).');
+      CC.content.historia = { ...CONTENT_DEFAULTS.historia };
+      CC.content.wifi_intro = { ...CONTENT_DEFAULTS.wifi_intro };
+      CC.content.contato = { ...CONTENT_DEFAULTS.contato };
+      CC.cards.locais = [];
+      CC.cards.wifi_steps = [];
+    }
+  }
+
+  fillContentForm('historia');
+  fillContentForm('wifi_intro');
+  fillContentForm('contato');
+
+  renderCardList('locais');
+  renderCardList('wifi_steps');
+}
+
+function fillContentForm(slug) {
+  const prefix = SLUG_TO_PREFIX[slug];
+  const data = CC.content[slug] || {};
+
+  const titleInput = $(`#${prefix}TitleInput`);
+  const bodyInput = $(`#${prefix}BodyInput`);
+
+  if (titleInput) titleInput.value = data.title || '';
+  if (bodyInput) bodyInput.value = data.body || '';
+
+  setImagePreview(prefix, data.image_url || '');
+}
+
+function setImagePreview(prefix, url) {
+  const wrap = $(`#${prefix}ImagePreviewWrap`);
+  const img = $(`#${prefix}ImagePreview`);
+  if (!wrap || !img) return;
+
+  if (url) {
+    img.src = url;
+    wrap.hidden = false;
+  } else {
+    img.src = '';
+    wrap.hidden = true;
+  }
+}
+
+/* ============================================================
+   FORMULÁRIOS — HISTÓRIA / WI-FI (intro) / CONTATO
+   ============================================================ */
+
+function wireContentForm(slug, formId, msgId) {
+  const prefix = SLUG_TO_PREFIX[slug];
+
+  $(`#${prefix}ImageInput`)?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    CC.pendingFile[prefix] = file;
+    const dataUrl = await fileToDataUrl(file);
+    setImagePreview(prefix, dataUrl);
+  });
+
+  $(`#${prefix}ImageRemove`)?.addEventListener('click', () => {
+    CC.pendingFile[prefix] = null;
+    CC.content[slug] = { ...(CC.content[slug] || {}), image_url: '' };
+    setImagePreview(prefix, '');
+    const fileInput = $(`#${prefix}ImageInput`);
+    if (fileInput) fileInput.value = '';
+  });
+
+  $(`#${formId}`)?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const msg = $(`#${msgId}`);
+    if (msg) msg.textContent = 'Salvando...';
+
+    const title = $(`#${prefix}TitleInput`)?.value.trim() || '';
+    const body = $(`#${prefix}BodyInput`)?.value.trim() || '';
+
+    let image_url = CC.content[slug]?.image_url || '';
+    const pending = CC.pendingFile[prefix];
+
+    if (pending) {
+      const uploaded = await uploadSiteImage(pending, 'content');
+      if (uploaded) image_url = uploaded;
+    }
+
+    const payload = { title, body, image_url };
+
+    const ok = await saveSiteContent(slug, payload);
+
+    if (ok) {
+      CC.content[slug] = { ...payload, slug };
+      CC.pendingFile[prefix] = null;
+      if (msg) { msg.className = 'form-msg success'; msg.textContent = 'Salvo com sucesso.'; }
+      toast('Conteúdo salvo.');
+    } else if (msg) {
+      msg.className = 'form-msg warning';
+      msg.textContent = 'Não foi possível salvar. Tente novamente.';
+    }
+  });
+}
+
+async function saveSiteContent(slug, payload) {
+  if (localMode()) {
+    const key = slug === 'wifi_intro' ? 'pti_content_wifi' : `pti_content_${slug}`;
+    localStorage.setItem(key, JSON.stringify(payload));
+    return true;
+  }
+
+  try {
+    const { error } = await portalSupabase
+      .from('site_content')
+      .upsert({ slug, ...payload, updated_at: new Date().toISOString() }, { onConflict: 'slug' });
+
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+wireContentForm('historia', 'historiaForm', 'historiaMsg');
+wireContentForm('wifi_intro', 'wifiIntroForm', 'wifiIntroMsg');
+wireContentForm('contato', 'contatoForm', 'contatoMsg');
+
+/* ============================================================
+   CARTÕES — LOCAIS ATENDIDOS / PASSOS WI-FI
+   ============================================================ */
+
+const SECTION_LABEL = {
+  locais: { new: 'NOVO LOCAL', title: 'Cadastrar local atendido' },
+  wifi_steps: { new: 'NOVO PASSO', title: 'Cadastrar passo do Wi-Fi' }
+};
+
+function renderCardList(section) {
+  const listId = section === 'locais' ? '#locaisList' : '#wifiStepsList';
+  const list = $(listId);
+  if (!list) return;
+
+  const items = (CC.cards[section] || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  if (!items.length) {
+    list.innerHTML = `<p class="card-admin-empty">Nenhum item cadastrado ainda.</p>`;
+    return;
+  }
+
+  list.innerHTML = items.map((item, idx) => `
+    <div class="card-admin-item" data-id="${esc(item.id)}">
+      ${item.image_url ? `<img src="${esc(item.image_url)}" alt="">` : ''}
+      <h4>${section === 'wifi_steps' ? `${idx + 1}. ` : ''}${esc(item.title)}</h4>
+      <p>${esc(item.description || '')}</p>
+      <div class="card-admin-actions">
+        <button class="icon-btn" data-action="up" title="Mover para cima">↑</button>
+        <button class="icon-btn" data-action="down" title="Mover para baixo">↓</button>
+        <button class="icon-btn" data-action="edit" title="Editar">${ADMIN_ICONS.edit}</button>
+        <button class="icon-btn danger" data-action="delete" title="Excluir">${ADMIN_ICONS.delete}</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.card-admin-item').forEach(el => {
+    const id = el.dataset.id;
+
+    el.querySelector('[data-action="edit"]')?.addEventListener('click', () => openCardEditor(section, id));
+    el.querySelector('[data-action="delete"]')?.addEventListener('click', () => deleteCard(section, id));
+    el.querySelector('[data-action="up"]')?.addEventListener('click', () => moveCard(section, id, -1));
+    el.querySelector('[data-action="down"]')?.addEventListener('click', () => moveCard(section, id, 1));
+  });
+}
+
+function openCardEditor(section, id) {
+  const item = id ? CC.cards[section].find(c => String(c.id) === String(id)) : null;
+
+  $('#cardSection').value = section;
+  $('#cardEditId').value = item ? item.id : '';
+  $('#cardEditorEyebrow').textContent = item ? 'EDITAR' : SECTION_LABEL[section].new;
+  $('#cardEditorTitle').textContent = item ? 'Editar item' : SECTION_LABEL[section].title;
+
+  $('#cardTitle').value = item?.title || '';
+  $('#cardDescription').value = item?.description || '';
+  $('#cardImageInput').value = '';
+  CC.pendingFile.card = null;
+  setImagePreview('card', item?.image_url || '');
+  $('#cardMsg').textContent = '';
+
+  showModal($('#cardEditor'));
+}
+
+$('#newLocal')?.addEventListener('click', () => openCardEditor('locais', null));
+$('#newWifiStep')?.addEventListener('click', () => openCardEditor('wifi_steps', null));
+$('#closeCardEditor')?.addEventListener('click', () => hideModal($('#cardEditor')));
+$('#cancelCard')?.addEventListener('click', () => hideModal($('#cardEditor')));
+
+$('#cardImageInput')?.addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  CC.pendingFile.card = file;
+  const dataUrl = await fileToDataUrl(file);
+  setImagePreview('card', dataUrl);
+});
+
+$('#cardImageRemove')?.addEventListener('click', () => {
+  CC.pendingFile.card = null;
+  setImagePreview('card', '');
+  $('#cardImageInput').value = '';
+});
+
+$('#cardForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const section = $('#cardSection').value;
+  const id = $('#cardEditId').value || null;
+  const title = $('#cardTitle').value.trim();
+  const description = $('#cardDescription').value.trim();
+  const msg = $('#cardMsg');
+
+  if (!title) {
+    msg.className = 'form-msg warning';
+    msg.textContent = 'Informe um título.';
+    return;
+  }
+
+  msg.textContent = 'Salvando...';
+
+  const existing = id ? CC.cards[section].find(c => String(c.id) === String(id)) : null;
+  let image_url = existing?.image_url || '';
+
+  if (CC.pendingFile.card) {
+    const uploaded = await uploadSiteImage(CC.pendingFile.card, section);
+    if (uploaded) image_url = uploaded;
+  }
+
+  const ok = await saveCard(section, { id, title, description, image_url, sort_order: existing?.sort_order ?? CC.cards[section].length });
+
+  if (ok) {
+    toast('Item salvo.');
+    hideModal($('#cardEditor'));
+    await loadSiteContent();
+  } else {
+    msg.className = 'form-msg warning';
+    msg.textContent = 'Não foi possível salvar este item.';
+  }
+});
+
+async function saveCard(section, payload) {
+  if (localMode()) {
+    const key = section === 'locais' ? 'pti_cards_locais' : 'pti_cards_wifi_steps';
+    const list = CC.cards[section].slice();
+
+    if (payload.id) {
+      const idx = list.findIndex(c => String(c.id) === String(payload.id));
+      if (idx > -1) list[idx] = { ...list[idx], ...payload };
+    } else {
+      list.push({ ...payload, id: 'local-' + Date.now(), active: true });
+    }
+
+    localStorage.setItem(key, JSON.stringify(list));
+    return true;
+  }
+
+  try {
+    if (payload.id && !String(payload.id).startsWith('local-')) {
+      const { error } = await portalSupabase
+        .from('site_cards')
+        .update({
+          title: payload.title,
+          description: payload.description,
+          image_url: payload.image_url,
+          sort_order: payload.sort_order,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', payload.id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await portalSupabase.from('site_cards').insert({
+        section,
+        title: payload.title,
+        description: payload.description,
+        image_url: payload.image_url,
+        sort_order: payload.sort_order,
+        active: true
+      });
+
+      if (error) throw error;
+    }
+
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+async function deleteCard(section, id) {
+  if (!confirm('Excluir este item?')) return;
+
+  if (localMode()) {
+    const key = section === 'locais' ? 'pti_cards_locais' : 'pti_cards_wifi_steps';
+    const list = CC.cards[section].filter(c => String(c.id) !== String(id));
+    localStorage.setItem(key, JSON.stringify(list));
+  } else {
+    try {
+      const { error } = await portalSupabase.from('site_cards').delete().eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      toast('Não foi possível excluir.');
+      return;
+    }
+  }
+
+  toast('Item excluído.');
+  await loadSiteContent();
+}
+
+async function moveCard(section, id, direction) {
+  const list = CC.cards[section].slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const idx = list.findIndex(c => String(c.id) === String(id));
+  const swapIdx = idx + direction;
+
+  if (idx === -1 || swapIdx < 0 || swapIdx >= list.length) return;
+
+  const a = list[idx];
+  const b = list[swapIdx];
+  const aOrder = a.sort_order ?? idx;
+  const bOrder = b.sort_order ?? swapIdx;
+
+  a.sort_order = bOrder;
+  b.sort_order = aOrder;
+
+  if (localMode()) {
+    const key = section === 'locais' ? 'pti_cards_locais' : 'pti_cards_wifi_steps';
+    localStorage.setItem(key, JSON.stringify(list));
+  } else {
+    try {
+      await portalSupabase.from('site_cards').update({ sort_order: a.sort_order }).eq('id', a.id);
+      await portalSupabase.from('site_cards').update({ sort_order: b.sort_order }).eq('id', b.id);
+    } catch (err) {
+      console.error(err);
+      toast('Não foi possível reordenar.');
+      return;
+    }
+  }
+
+  await loadSiteContent();
+}
+
+/* ============================================================
+   INTEGRAÇÃO COM O CICLO DE VIDA DO ADMIN
+   ============================================================ */
+
+const _originalLoadAdmin = window.loadAdmin;
+
+window.loadAdmin = async function patchedLoadAdmin() {
+  await _originalLoadAdmin();
+
+  if (A.user || localMode()) {
+    const activeTab = document.querySelector('#adminTabs .admin-tab.active')?.dataset.tab;
+    if (activeTab === 'conteudo') {
+      try { await loadSiteContent(); } catch (err) { console.error(err); }
+    }
+  }
+};
