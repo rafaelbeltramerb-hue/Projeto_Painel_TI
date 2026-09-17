@@ -326,38 +326,64 @@ function normalizeLinkUrl(value) {
 
   if (/^\\\\/.test(url)) {
 
-    return (
+    url =
       'file://' +
       url
         .replace(/^\\+/, '')
-        .replace(/\\/g, '/')
-    );
+        .replace(/\\/g, '/');
 
-  }
-
-
-  if (
+  } else if (
     /^[A-Za-z]:[\\/]/.test(url)
   ) {
 
-    return (
+    url =
       'file:///' +
-      url.replace(/\\/g, '/')
-    );
+      url.replace(/\\/g, '/');
 
-  }
-
-
-  if (
+  } else if (
     /^file:\/\//i.test(url)
   ) {
+
+    // já está no formato file://, mantém como está
+
+  } else {
 
     return url;
 
   }
 
+  // Fase 1: quando o caminho estiver dentro da raiz de rede
+  // configurada (PORTAL_CONFIG.networkRoot), salvamos como caminho
+  // RELATIVO em vez de file:// absoluto — mesmo padrão já usado pela
+  // maioria dos atalhos originais, mais fácil de ler/manter e já
+  // resolvido corretamente pelo app.js na hora do clique.
+  return toRelativeIfInsideRoot(url);
 
-  return url;
+}
+
+function toRelativeIfInsideRoot(fileUrl) {
+
+  const root =
+    String(window.PORTAL_CONFIG?.networkRoot || '').trim();
+
+  if (!root) return fileUrl;
+
+  const normalizedRoot =
+    root
+      .replace(/^file:\/+/i, '')
+      .replace(/\\/g, '/')
+      .replace(/\/+$/, '');
+
+  const normalizedUrl =
+    fileUrl
+      .replace(/^file:\/+/i, '')
+      .replace(/\\/g, '/');
+
+  if (normalizedUrl.toLowerCase().startsWith(normalizedRoot.toLowerCase() + '/')) {
+    return normalizedUrl.slice(normalizedRoot.length + 1);
+  }
+
+  return fileUrl;
 
 }
 
@@ -1170,7 +1196,59 @@ async function loadAdmin() {
   }
 
 
+  await checkAdminRole();
+
+
   await refresh();
+
+}
+
+
+/* ============================================================
+   VERIFICAÇÃO DE PAPEL (role) DO USUÁRIO LOGADO
+   Como as políticas de escrita agora exigem profiles.role='admin',
+   avisamos aqui se o usuário logado ainda não tem esse cadastro —
+   sem isso, os formulários abrem normalmente mas toda gravação
+   será silenciosamente bloqueada pelo RLS.
+   ============================================================ */
+
+async function checkAdminRole() {
+
+  const warn = $('#roleWarning');
+  if (!warn || !A.user) return;
+
+  try {
+
+    const { data: profile, error } =
+      await portalSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', A.user.id)
+        .maybeSingle();
+
+    if (error) throw error;
+
+    if (profile?.role === 'admin') {
+      warn.hidden = true;
+      warn.textContent = '';
+      return;
+    }
+
+    warn.hidden = false;
+    warn.textContent =
+      'Este usuário ainda não está cadastrado como admin em "profiles". ' +
+      'As telas abrem normalmente, mas nenhuma gravação será salva até ' +
+      'um administrador do banco rodar: insert into profiles (id, role) ' +
+      `values ('${A.user.id}', 'admin') on conflict (id) do update set role='admin';`;
+
+  } catch (err) {
+
+    console.error(err);
+    warn.hidden = false;
+    warn.textContent =
+      'Não foi possível confirmar o papel (role) deste usuário em "profiles".';
+
+  }
 
 }
 

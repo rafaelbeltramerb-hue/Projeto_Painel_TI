@@ -66,39 +66,47 @@ on conflict (id) do nothing;
 alter table public.site_content enable row level security;
 alter table public.site_cards enable row level security;
 
+drop policy if exists "public read site_content" on public.site_content;
 create policy "public read site_content" on public.site_content
   for select using (true);
 
+drop policy if exists "public read active site_cards" on public.site_cards;
 create policy "public read active site_cards" on public.site_cards
   for select using (active = true);
 
 -- Apenas usuários com profiles.role = 'admin' podem escrever.
+drop policy if exists "admins manage site_content" on public.site_content;
 create policy "admins manage site_content" on public.site_content
   for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
+drop policy if exists "admins manage site_cards" on public.site_cards;
 create policy "admins manage site_cards" on public.site_cards
   for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- Storage: leitura pública do bucket, escrita restrita a admins.
+drop policy if exists "public read site-images" on storage.objects;
 create policy "public read site-images" on storage.objects
   for select using (bucket_id = 'site-images');
 
+drop policy if exists "admins upload site-images" on storage.objects;
 create policy "admins upload site-images" on storage.objects
   for insert with check (
     bucket_id = 'site-images'
     and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
   );
 
+drop policy if exists "admins update site-images" on storage.objects;
 create policy "admins update site-images" on storage.objects
   for update using (
     bucket_id = 'site-images'
     and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
   );
 
+drop policy if exists "admins delete site-images" on storage.objects;
 create policy "admins delete site-images" on storage.objects
   for delete using (
     bucket_id = 'site-images'

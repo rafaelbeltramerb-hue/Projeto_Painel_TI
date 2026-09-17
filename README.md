@@ -19,7 +19,8 @@ Os destinos dos atalhos são preservados. O portal aceita `file://`, UNC, caminh
 1. `supabase-schema.sql` — schema base (categories/links/profiles/favorites). **Se já foi executado antes, não rode de novo.**
 2. `supabase-admin-policies-fix.sql` — corrige uma lacuna do schema original: não existiam políticas de INSERT/UPDATE/DELETE para `categories`/`links`, então a administração só gravava em "Modo Local". Seguro rodar mesmo se o schema já estiver em produção.
 3. `supabase-content-schema.sql` — cria `site_content` e `site_cards` (usados pela aba "Conteúdo do Site" do admin) e o bucket de imagens `site-images`.
-4. `supabase-migration-links.sql` — opcional, migra/atualiza os 30 atalhos originais da planilha.
+4. `supabase-fase1-seguranca.sql` — Fase 1 do roteiro: consulta para localizar os `id` dos usuários e cadastrá-los como admin, restringe a categoria **SENHAS** a usuários autenticados (antes era pública), e traz um script opcional (com preview) para padronizar o formato de URL dos atalhos.
+5. `supabase-migration-links.sql` — opcional, migra/atualiza os 30 atalhos originais da planilha.
 
 Configure `js/supabase-config.js` com a Project URL e a chave pública (anon).
 
@@ -29,7 +30,7 @@ Configure `js/supabase-config.js` com a Project URL e a chave pública (anon).
 insert into public.profiles (id, role) values ('<uuid-do-usuario>', 'admin')
 on conflict (id) do update set role = 'admin';
 ```
-Sem isso, o login funciona mas as gravações são bloqueadas pelo RLS (comportamento esperado).
+Sem isso, o login funciona mas as gravações são bloqueadas pelo RLS (comportamento esperado). A partir da Fase 1, o próprio `admin.html` avisa na tela (com o comando pronto, incluindo o `id`) quando o usuário logado ainda não está cadastrado como admin.
 
 ## Modo Local
 Se `js/supabase-config.js` não estiver configurado, o admin opera em "Modo Local": tudo é salvo no `localStorage` do navegador, útil para testar antes de configurar o Supabase.

@@ -215,6 +215,8 @@
 
             <p id="sessionInfo"></p>
 
+            <p id="roleWarning" class="form-msg warning" hidden></p>
+
           </div>
 
           <button
@@ -736,8 +738,11 @@
             id="urlHint"
             class="field-hint">
 
-            O endereço será montado automaticamente
-            a partir do caminho da pasta e do nome do arquivo.
+            O endereço será montado automaticamente a partir do
+            caminho da pasta e do nome do arquivo. Quando o arquivo
+            estiver dentro da raiz de rede configurada, é salvo como
+            caminho relativo (padrão recomendado); fora dela, como
+            file://.
 
           </small>
 
