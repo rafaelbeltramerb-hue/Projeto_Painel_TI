@@ -92,90 +92,47 @@ const ICONS = {
 
   'Manuais': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5V4.5Z"
-        stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M5 4.5V19a2.5 2.5 0 0 1 2.5-2.5H19"
-        stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linecap="round"
-      />
+      <path fill="currentColor" d="M4 5.2c0-.9.8-1.6 1.7-1.4C7.6 4.1 9.8 4.8 11.3 6v12.8c-1.5-1.1-3.6-1.7-5.5-2-.9-.1-1.8-1-1.8-1.9V5.2Z"/>
+      <path fill="currentColor" d="M20 5.2c0-.9-.8-1.6-1.7-1.4-1.9.3-4.1 1-5.6 2.2v12.8c1.5-1.1 3.6-1.7 5.5-2 .9-.1 1.8-1 1.8-1.9V5.2Z"/>
     </svg>
   `,
 
   'Telefonia': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M7.2 3.8 4.8 5.2c-.9.5-1.3 1.6-.9 2.6
+      <path fill="currentColor" d="M7.2 3.8 4.8 5.2c-.9.5-1.3 1.6-.9 2.6
         2.2 5.6 6.7 10.1 12.3 12.3 1 .4 2.1 0 2.6-.9l1.4-2.4
         c.4-.7.2-1.6-.4-2l-3.1-2.1c-.6-.4-1.4-.3-1.9.2l-1.3 1.3
         a15.7 15.7 0 0 1-4.2-4.2l1.3-1.3c.5-.5.6-1.3.2-1.9
-        L9.2 4.2c-.4-.6-1.3-.8-2-.4Z"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
+        L9.2 4.2c-.4-.6-1.3-.8-2-.4Z"/>
     </svg>
   `,
 
   'Rede': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle
-        cx="12"
-        cy="12"
-        r="8.5"
-        stroke="currentColor"
-        stroke-width="1.7"
-      />
-      <path
-        d="M3.8 12h16.4
-        M12 3.5c2.1 2.3 3.2 5.1 3.2 8.5S14.1 18.2 12 20.5
-        C9.9 18.2 8.8 15.4 8.8 12S9.9 5.8 12 3.5Z"
-        stroke="currentColor"
-        stroke-width="1.5"
-      />
+      <circle cx="12" cy="17" r="1.6" fill="currentColor"/>
+      <path fill="currentColor" d="M8.8 13.7a4.7 4.7 0 0 1 6.4 0 1 1 0 0 1-1.35 1.47
+        2.7 2.7 0 0 0-3.7 0 1 1 0 1 1-1.35-1.47Z"/>
+      <path fill="currentColor" d="M5.6 10.3a9.2 9.2 0 0 1 12.8 0 1 1 0 1 1-1.4 1.44
+        7.2 7.2 0 0 0-10 0 1 1 0 1 1-1.4-1.44Z"/>
     </svg>
   `,
 
   'Softwares': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect
-        x="3.5"
-        y="4"
-        width="17"
-        height="13"
-        rx="2"
-        stroke="currentColor"
-        stroke-width="1.7"
-      />
-      <path
-        d="M8 20h8M12 17v3
-        M7.5 8h3M13.5 8h3M7.5 11.5h9"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-      />
+      <rect x="3.5" y="3.5" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+      <rect x="13.3" y="3.5" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+      <rect x="3.5" y="13.3" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+      <rect x="13.3" y="13.3" width="7.2" height="7.2" rx="2" fill="currentColor"/>
     </svg>
   `,
 
   'Administrativo': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3.3" y="7.5" width="17.4" height="12" rx="2.4" fill="currentColor"/>
       <path
-        d="M5 7.5h14v12H5z"
+        d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"
         stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M8 7.5V5.8A1.8 1.8 0 0 1 9.8 4h4.4
-        A1.8 1.8 0 0 1 16 5.8v1.7
-        M8.5 12h7M8.5 15.5H13"
-        stroke="currentColor"
-        stroke-width="1.6"
+        stroke-width="2"
         stroke-linecap="round"
       />
     </svg>
@@ -184,88 +141,59 @@ const ICONS = {
   'Termos': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M6 3.5h9l4 4v13H6z"
+        d="M12 3.5v16.8M7.5 20.3h9"
         stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M15 3.5v4h4M9 12h6M9 15.5h6"
-        stroke="currentColor"
-        stroke-width="1.6"
+        stroke-width="1.8"
         stroke-linecap="round"
       />
+      <path
+        d="M12 6 5.5 7.8M12 6l6.5 1.8"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path fill="currentColor" d="M5.5 7.8 3 13a2.7 2.7 0 0 0 5 0L5.5 7.8Z"/>
+      <path fill="currentColor" d="M18.5 7.8 16 13a2.7 2.7 0 0 0 5 0l-2.5-5.2Z"/>
     </svg>
   `,
 
   'Reconhecimento de curso': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="m12 3 2.2 4.5 5 .7-3.6 3.5.9 5
-        -4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3Z"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
+      <path fill="currentColor" d="M12 3.3 2 8l10 4.3L20 9v4.3a1 1 0 1 0 2 0V8.6
+        a1 1 0 0 0-.6-.9L12 3.3Z"/>
+      <path fill="currentColor" d="M6 10.6v3.6c0 1.7 2.7 3.1 6 3.1s6-1.4 6-3.1v-3.6
+        l-6 2.6-6-2.6Z"/>
     </svg>
   `,
 
   'Planejamento': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect
-        x="4"
-        y="5.5"
-        width="16"
-        height="15"
-        rx="2"
-        stroke="currentColor"
-        stroke-width="1.7"
-      />
-      <path
-        d="M8 3.5v4M16 3.5v4M4 9.5h16
-        M8 13h3M13 13h3M8 16.5h3"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-      />
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2.4" fill="currentColor"/>
+      <rect x="7" y="3.5" width="1.8" height="4" rx=".9" fill="currentColor"/>
+      <rect x="15.2" y="3.5" width="1.8" height="4" rx=".9" fill="currentColor"/>
     </svg>
   `,
 
   'SENHAS': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle
-        cx="8.5"
-        cy="14.5"
-        r="3.5"
-        stroke="currentColor"
-        stroke-width="1.7"
-      />
+      <rect x="5" y="11" width="14" height="9.5" rx="2.4" fill="currentColor"/>
       <path
-        d="m11.5 12 7.5-7.5M16 5l3 3
-        M14.5 9.5l2 2"
+        d="M8 11V8a4 4 0 1 1 8 0v3"
         stroke="currentColor"
-        stroke-width="1.7"
+        stroke-width="2"
         stroke-linecap="round"
-        stroke-linejoin="round"
       />
     </svg>
   `,
 
   'Datashow': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect
-        x="4"
-        y="5"
-        width="16"
-        height="12"
-        rx="2"
-        stroke="currentColor"
-        stroke-width="1.7"
-      />
+      <rect x="3.5" y="5" width="17" height="11.5" rx="2" fill="currentColor"/>
       <path
-        d="M9 20h6M12 17v3"
+        d="M9 20.3h6M12 16.5v3.8"
         stroke="currentColor"
-        stroke-width="1.7"
+        stroke-width="2"
         stroke-linecap="round"
       />
     </svg>
@@ -273,35 +201,16 @@ const ICONS = {
 
   'Contratos OBC': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 5.5h9l5 5v8H5z"
-        stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M14 5.5v5h5M8 14h8M8 17h5"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-      />
+      <rect x="7" y="3.5" width="12" height="15" rx="1.6" fill="currentColor" opacity=".55"/>
+      <rect x="4.5" y="6.5" width="12" height="15" rx="1.6" fill="currentColor"/>
     </svg>
   `,
 
   'default': `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M3.5 7.5h7l1.8 2h8.2v9a2 2 0 0 1-2 2h-13
-        a2 2 0 0 1-2-2v-11Z"
-        stroke="currentColor"
-        stroke-width="1.7"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M3.5 9.5h17"
-        stroke="currentColor"
-        stroke-width="1.5"
-      />
+      <path fill="currentColor" d="M3.5 7.2a1.7 1.7 0 0 1 1.7-1.7h5.1l1.8 2h6.7
+        a1.7 1.7 0 0 1 1.7 1.7v8.1a1.7 1.7 0 0 1-1.7 1.7H5.2
+        a1.7 1.7 0 0 1-1.7-1.7V7.2Z"/>
     </svg>
   `
 };
