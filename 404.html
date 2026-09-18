@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página não encontrada — TI Xanxerê</title>
+  <link rel="icon" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/portal.css">
+  <style>
+    .notfound-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .notfound-code {
+      font-size: 5rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: .5rem;
+    }
+    .notfound-actions {
+      display: flex;
+      gap: .75rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .notfound-actions a {
+      display: inline-block;
+      padding: .7rem 1.3rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .notfound-actions .primary-link {
+      background: var(--navbar-bg);
+      color: #fff;
+    }
+    .notfound-actions .secondary-link {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="notfound-wrap">
+    <div>
+      <div class="notfound-code">404</div>
+      <h1>Página não encontrada</h1>
+      <p>O endereço que você tentou acessar não existe ou foi movido.</p>
+
+      <div class="notfound-actions">
+        <a href="index.html" class="primary-link">Ir para o início</a>
+        <a href="login.html" class="secondary-link">Área Restrita</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/theme.js"></script>
+</body>
+</html>

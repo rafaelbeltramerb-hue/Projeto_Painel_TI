@@ -47,6 +47,58 @@ function fileToDataUrl(file) {
   });
 }
 
+/* ------------------------------------------------------------
+   Fase 3: redimensiona/comprime imagens antes de gerar a prévia
+   e de enviar, para não inflar o Storage (ou o localStorage, em
+   Modo Local) com fotos em resolução cheia de celular.
+   ------------------------------------------------------------ */
+function resizeImageFile(file, maxDim = 1280, quality = 0.82) {
+  return new Promise((resolve) => {
+    if (!file || !file.type || !file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        if (width <= maxDim && height <= maxDim) {
+          resolve(file);
+          return;
+        }
+
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) { resolve(file); return; }
+          const newName = file.name.replace(/\.\w+$/, '') + '.jpg';
+          resolve(new File([blob], newName, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+
+      img.onerror = () => resolve(file);
+      img.src = reader.result;
+    };
+
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadSiteImage(file, folder) {
   if (!file) return null;
 
@@ -182,8 +234,9 @@ function wireContentForm(slug, formId, msgId) {
   $(`#${prefix}ImageInput`)?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    CC.pendingFile[prefix] = file;
-    const dataUrl = await fileToDataUrl(file);
+    const resized = await resizeImageFile(file);
+    CC.pendingFile[prefix] = resized;
+    const dataUrl = await fileToDataUrl(resized);
     setImagePreview(prefix, dataUrl);
   });
 
@@ -323,8 +376,9 @@ $('#cancelCard')?.addEventListener('click', () => hideModal($('#cardEditor')));
 $('#cardImageInput')?.addEventListener('change', async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
-  CC.pendingFile.card = file;
-  const dataUrl = await fileToDataUrl(file);
+  const resized = await resizeImageFile(file);
+  CC.pendingFile.card = resized;
+  const dataUrl = await fileToDataUrl(resized);
   setImagePreview('card', dataUrl);
 });
 
@@ -674,6 +728,73 @@ async function moveQuickLink(id, direction) {
 
   await loadQuickLinks();
 }
+
+/* ============================================================
+   BACKUP / EXPORTAÇÃO (Fase 3)
+   Baixa um .json com tudo que o admin gerencia hoje: categorias,
+   atalhos, conteúdo do site e menu lateral. Útil como salvaguarda
+   antes de mexer no Supabase, ou para levar os dados para outro
+   ambiente.
+   ============================================================ */
+
+$('#exportBackup')?.addEventListener('click', async () => {
+
+  toast('Gerando backup...');
+
+  try {
+    const backup = {
+      generated_at: new Date().toISOString(),
+      mode: localMode() ? 'local' : 'supabase'
+    };
+
+    if (localMode()) {
+
+      backup.categories = A.categories || [];
+      backup.links = A.links || [];
+      backup.site_content = Object.values(CC.content || {});
+      backup.site_cards = [...(CC.cards?.locais || []), ...(CC.cards?.wifi_steps || [])];
+      backup.quick_links = QUICK_LINKS || [];
+
+    } else {
+
+      const [
+        { data: cats }, { data: links }, { data: content }, { data: cards }, { data: ql }
+      ] = await Promise.all([
+        portalSupabase.from('categories').select('*'),
+        portalSupabase.from('links').select('*'),
+        portalSupabase.from('site_content').select('*'),
+        portalSupabase.from('site_cards').select('*'),
+        portalSupabase.from('quick_links').select('*')
+      ]);
+
+      backup.categories = cats || [];
+      backup.links = links || [];
+      backup.site_content = content || [];
+      backup.site_cards = cards || [];
+      backup.quick_links = ql || [];
+
+    }
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `portal-ti-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+    toast('Backup baixado.');
+
+  } catch (err) {
+    console.error(err);
+    toast('Não foi possível gerar o backup.');
+  }
+
+});
 
 /* ============================================================
    INTEGRAÇÃO COM O CICLO DE VIDA DO ADMIN

@@ -29,6 +29,60 @@ const esc = x =>
 
 
 /* ============================================================
+   CORES DOS ÍCONES (estilo "ícone de app" — iOS)
+   ============================================================ */
+
+const CATEGORY_GRADIENTS = {
+  'Administrativo': ['#5b93ff', '#2f5fe0'],
+  'Rede': ['#33d1c9', '#0ea5b7'],
+  'Manuais': ['#ffb054', '#f2802f'],
+  'Telefonia': ['#5fdb8e', '#22a85e'],
+  'Softwares': ['#b18cff', '#7c5cf0'],
+  'Termos': ['#aab2c0', '#7c8698'],
+  'Reconhecimento de curso': ['#6fa8ff', '#3d63e8'],
+  'Planejamento': ['#ff7fc0', '#e5399e'],
+  'SENHAS': ['#ff8a80', '#e6483f'],
+  'Datashow': ['#ffd469', '#f5a524'],
+  'Contratos OBC': ['#d4a373', '#a9784a'],
+  'default': ['#9aa4b2', '#707c8c']
+};
+
+function getCategoryGradient(name) {
+
+  const key = String(name || '').trim();
+
+  if (CATEGORY_GRADIENTS[key]) {
+    return CATEGORY_GRADIENTS[key];
+  }
+
+  // Categoria criada pelo admin sem cor definida: gera uma cor
+  // estável a partir do nome, para sempre cair na mesma cor.
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+
+  const hue = hash % 360;
+
+  return [
+    `hsl(${hue}, 78%, 68%)`,
+    `hsl(${hue}, 70%, 48%)`
+  ];
+}
+
+function iconStyle(name) {
+
+  const [from, to] =
+    getCategoryGradient(name);
+
+  return (
+    `background: linear-gradient(155deg, ${from}, ${to});`
+  );
+
+}
+
+
+/* ============================================================
    ÍCONES SVG
    ============================================================ */
 
@@ -894,6 +948,7 @@ function card(x) {
 
         <span
           class="ico"
+          style="${iconStyle(x.category)}"
           aria-hidden="true"
         >
           ${getCategoryIcon(x.category)}

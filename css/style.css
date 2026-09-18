@@ -719,26 +719,48 @@ button {
    ============================================================ */
 
 .ico {
-  width: 29px;
-  height: 29px;
+  width: 42px;
+  height: 42px;
 
   display: grid;
   place-items: center;
 
   flex-shrink: 0;
 
-  border-radius: 8px;
+  border-radius: 12px;
 
-  color:
-    var(--accent);
+  color: #fff;
 
-  background:
-    var(--accent-soft);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .35),
+    inset 0 -6px 10px rgba(0, 0, 0, .12);
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.ico::before {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, .22),
+    rgba(255, 255, 255, 0) 45%
+  );
+
+  pointer-events: none;
 }
 
 .ico svg {
-  width: 17px;
-  height: 17px;
+  width: 21px;
+  height: 21px;
 
   display: block;
 
@@ -747,6 +769,9 @@ button {
 
   stroke:
     currentColor;
+
+  position: relative;
+  z-index: 1;
 }
 
 .ico svg * {
