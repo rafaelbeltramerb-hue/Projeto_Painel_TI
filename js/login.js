@@ -1,21 +1,6 @@
 const $ = s => document.querySelector(s);
 
 /* ============================================================
-   TEMA
-   ============================================================ */
-
-(function initTheme() {
-  const saved = localStorage.getItem('pti_theme');
-  if (saved === 'dark') document.documentElement.dataset.theme = 'dark';
-})();
-
-$('#themeFloat')?.addEventListener('click', () => {
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
-  localStorage.setItem('pti_theme', isDark ? 'light' : 'dark');
-});
-
-/* ============================================================
    LOGIN
    ============================================================ */
 

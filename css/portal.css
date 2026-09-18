@@ -1,3 +1,33 @@
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #f4f6f8;
+  --text: #222831;
+  --text-muted: #5b6470;
+  --border: #ddd;
+  --navbar-bg: #003366;
+  --accent: #0066cc;
+  --hero-bg: #1a252f;
+  --sidebar-bg: #1a252f;
+  --sidebar-header-bg: #111a22;
+  --shadow: rgba(0,0,0,0.1);
+}
+
+:root[data-theme="dark"] {
+  --bg: #12161c;
+  --surface: #1b212b;
+  --surface-2: #171c24;
+  --text: #e7ebf1;
+  --text-muted: #9aa4b2;
+  --border: #2b323d;
+  --navbar-bg: #0d1520;
+  --accent: #3b82f6;
+  --hero-bg: #0d1520;
+  --sidebar-bg: #0d1520;
+  --sidebar-header-bg: #090e15;
+  --shadow: rgba(0,0,0,0.4);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -5,9 +35,39 @@
   font-family: Arial, sans-serif;
 }
 
+html {
+  background: var(--bg);
+}
+
 body {
-  color: #333;
+  color: var(--text);
+  background: var(--bg);
   line-height: 1.6;
+  transition: background .15s ease, color .15s ease;
+}
+
+/* Botão flutuante de tema, usado em index.html e dashboard.html */
+.theme-toggle {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
 }
 
 /* Navbar */
@@ -15,7 +75,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #003366;
+  background-color: var(--navbar-bg);
   padding: 1rem 2rem;
   color: #fff;
 }
@@ -33,14 +93,14 @@ body {
 }
 
 .btn-login {
-  background-color: #0066cc;
+  background-color: var(--accent);
   padding: 0.5rem 1rem;
   border-radius: 4px;
 }
 
 /* Hero */
 .hero {
-  background: linear-gradient(rgba(0,51,102,0.8), rgba(0,51,102,0.8)), #1a252f;
+  background: linear-gradient(rgba(0,51,102,0.8), rgba(0,51,102,0.8)), var(--hero-bg);
   color: white;
   padding: 4rem 2rem;
   text-align: center;
@@ -65,7 +125,7 @@ body {
 }
 
 .bg-light {
-  background-color: #f4f6f8;
+  background-color: var(--surface-2);
 }
 
 .grid-cards, .steps-grid {
@@ -76,26 +136,28 @@ body {
 }
 
 .card, .step {
-  background: white;
+  background: var(--surface);
+  color: var(--text);
   padding: 1.5rem;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
 }
 
 .step-num {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #0066cc;
+  color: var(--accent);
 }
 
 /* Login Form */
 .login-box {
   max-width: 400px;
   margin: 0 auto;
-  background: white;
+  background: var(--surface);
+  color: var(--text);
   padding: 2rem;
   border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px var(--shadow);
 }
 
 .form-group {
@@ -110,14 +172,16 @@ body {
 .form-group input {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .btn-submit {
   width: 100%;
   padding: 0.7rem;
-  background-color: #003366;
+  background-color: var(--navbar-bg);
   color: white;
   border: none;
   border-radius: 4px;
@@ -136,7 +200,7 @@ body {
   width: 250px;
   min-width: 72px;
   max-width: 340px;
-  background-color: #1a252f;
+  background-color: var(--sidebar-bg);
   color: white;
   display: flex;
   flex-direction: column;
@@ -153,7 +217,7 @@ body {
   align-items: center;
   gap: .6rem;
   padding: 1.1rem 1rem;
-  background-color: #111a22;
+  background-color: var(--sidebar-header-bg);
 }
 
 .sidebar-toggle {
@@ -190,6 +254,10 @@ body {
 }
 
 .sidebar.collapsed .sidebar-title {
+  display: none;
+}
+
+.sidebar.collapsed .theme-toggle {
   display: none;
 }
 
@@ -252,7 +320,7 @@ body {
   left: calc(100% + 10px);
   top: 50%;
   transform: translateY(-50%);
-  background: #111a22;
+  background: var(--sidebar-header-bg);
   color: #fff;
   padding: .35rem .6rem;
   border-radius: 4px;
@@ -303,6 +371,7 @@ body {
 .main-content {
   flex: 1;
   height: 100vh;
+  background: var(--bg);
 }
 
 .app-iframe {

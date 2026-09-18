@@ -232,6 +232,7 @@
         <div class="admin-tabs" id="adminTabs">
           <button type="button" class="admin-tab active" data-tab="atalhos">Atalhos</button>
           <button type="button" class="admin-tab" data-tab="conteudo">Conteúdo do Site</button>
+          <button type="button" class="admin-tab" data-tab="menulateral">Menu Lateral (Painel)</button>
         </div>
 
         <div id="tabAtalhos" class="admin-tabpanel">
@@ -479,6 +480,25 @@
         </div>
         <!-- /tabConteudo -->
 
+        <!-- =================================================
+             MENU LATERAL DO PAINEL (quick_links)
+             ================================================= -->
+
+        <div id="tabMenuLateral" class="admin-tabpanel" hidden>
+
+          <div class="admin-toolbar">
+            <div>
+              <h2>Menu Lateral do Painel Interno</h2>
+              <small>Atalhos externos exibidos na sidebar do dashboard (ex.: Reservas Agenda, Monitoramento Rede). "Painel da TI", "Administração" e "Sair" são fixos do sistema e não aparecem aqui.</small>
+            </div>
+            <button type="button" id="newQuickLink" class="secondary">+ Novo link</button>
+          </div>
+
+          <div id="quickLinksList" class="card-admin-list"></div>
+
+        </div>
+        <!-- /tabMenuLateral -->
+
       </section>
 
     </main>
@@ -530,6 +550,56 @@
         </div>
 
         <div id="cardMsg" class="form-msg"></div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       MODAL — LINK RÁPIDO (Menu Lateral)
+       ========================================================= -->
+
+  <div id="quickLinkEditor" class="modal" hidden style="display:none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <span id="quickLinkEditorEyebrow">NOVO LINK</span>
+          <h2 id="quickLinkEditorTitle">Cadastrar link</h2>
+        </div>
+        <button id="closeQuickLinkEditor" class="close" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="quickLinkForm">
+        <input id="quickLinkEditId" type="hidden">
+
+        <label>
+          Título
+          <input id="quickLinkTitle" required placeholder="Ex.: Reservas Agenda">
+        </label>
+
+        <label>
+          Endereço (URL)
+          <input id="quickLinkUrl" required type="text" placeholder="https://...">
+        </label>
+
+        <label>
+          Ícone
+          <select id="quickLinkIcon">
+            <option value="link">Link genérico</option>
+            <option value="calendar">Agenda / Calendário</option>
+            <option value="network">Rede / Monitoramento</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="gear">Configurações</option>
+            <option value="home">Início</option>
+          </select>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelQuickLink" class="secondary">Cancelar</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="quickLinkMsg" class="form-msg"></div>
       </form>
     </div>
   </div>

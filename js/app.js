@@ -9,7 +9,8 @@ const S = {
   recent: JSON.parse(localStorage.getItem('pti_recent') || '[]'),
   favorites: JSON.parse(localStorage.getItem('pti_fav') || '[]'),
   dbFavorites: new Set(),
-  usingDb: false
+  usingDb: false,
+  user: null
 };
 
 const $ = s => document.querySelector(s);
@@ -382,7 +383,7 @@ function isFav(x) {
 
   const idStr = String(x.id);
 
-  return S.usingDb
+  return (S.usingDb && S.user)
     ? S.dbFavorites.has(idStr)
     : S.favorites.includes(idStr);
 
@@ -672,6 +673,21 @@ function openItem(x) {
   renderQuick();
 
 
+  if (S.usingDb && S.user && window.portalSupabase) {
+
+    portalSupabase
+      .from('recent_access')
+      .upsert(
+        { user_id: S.user.id, link_id: x.id, accessed_at: new Date().toISOString() },
+        { onConflict: 'user_id,link_id' }
+      )
+      .then(({ error }) => {
+        if (error) console.warn('Não foi possível sincronizar recentes.', error);
+      });
+
+  }
+
+
   const url =
     resolveUrl(x);
 
@@ -864,9 +880,13 @@ function card(x) {
         : 'INTERNO';
 
 
+  const broken =
+    !!x.reported_broken_at;
+
+
   return `
     <article
-      class="card"
+      class="card ${broken ? 'card-broken' : ''}"
       data-o="${esc(x.id)}"
     >
 
@@ -880,15 +900,29 @@ function card(x) {
         </span>
 
 
-        <button
-          class="star ${f ? 'on' : ''}"
-          data-f="${esc(x.id)}"
-          title="${f ? 'Remover favorito' : 'Adicionar favorito'}"
-          aria-label="${f ? 'Remover favorito' : 'Adicionar favorito'}"
-          type="button"
-        >
-          ${f ? '★' : '☆'}
-        </button>
+        <div class="ct-actions">
+
+          <button
+            class="report-btn ${broken ? 'on' : ''}"
+            data-r="${esc(x.id)}"
+            title="${broken ? 'Já reportado com problema — clique para reportar de novo' : 'Reportar link quebrado'}"
+            aria-label="Reportar link quebrado"
+            type="button"
+          >
+            ⚑
+          </button>
+
+          <button
+            class="star ${f ? 'on' : ''}"
+            data-f="${esc(x.id)}"
+            title="${f ? 'Remover favorito' : 'Adicionar favorito'}"
+            aria-label="${f ? 'Remover favorito' : 'Adicionar favorito'}"
+            type="button"
+          >
+            ${f ? '★' : '☆'}
+          </button>
+
+        </div>
 
       </div>
 
@@ -897,6 +931,7 @@ function card(x) {
         ${esc(x.name)}
       </h3>
 
+      ${broken ? '<p class="broken-badge">⚠ Reportado com problema recentemente</p>' : ''}
 
       <div class="cf">
 
@@ -929,7 +964,7 @@ function card(x) {
 function renderQuick() {
 
   const favList =
-    S.usingDb
+    (S.usingDb && S.user)
       ? Array.from(S.dbFavorites)
       : S.favorites;
 
@@ -1081,8 +1116,12 @@ async function toggleFavorite(x) {
     String(x.id);
 
 
-  if (!S.usingDb) {
+  if (!S.usingDb || !S.user) {
 
+    // Sem Supabase configurado, ou sem login: favoritos ficam
+    // salvos localmente neste navegador (mesmo comportamento de
+    // antes, só que agora também se aplica a quem está usando o
+    // portal sem estar logado, em vez de simplesmente bloquear).
     S.favorites =
       S.favorites.includes(idStr)
 
@@ -1116,21 +1155,7 @@ async function toggleFavorite(x) {
   }
 
 
-  const {
-    data: { user }
-  } =
-    await portalSupabase.auth.getUser();
-
-
-  if (!user) {
-
-    toast(
-      'Entre na administração para sincronizar favoritos.'
-    );
-
-    return;
-
-  }
+  const user = S.user;
 
 
   if (S.dbFavorites.has(idStr)) {
@@ -1184,6 +1209,74 @@ async function toggleFavorite(x) {
 
   }
 
+
+  render();
+
+}
+
+
+/* ============================================================
+   REPORTAR LINK QUEBRADO
+   ============================================================ */
+
+async function reportBroken(x) {
+
+  if (!S.usingDb || !window.portalSupabase) {
+
+    toast(
+      'Disponível apenas com o Supabase configurado.'
+    );
+
+    return;
+
+  }
+
+
+  if (!S.user) {
+
+    toast(
+      'Entre com sua conta para reportar um link com problema.'
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !confirm(
+      `Reportar "${x.name}" como link com problema? A equipe de TI será avisada no painel de administração.`
+    )
+  ) {
+    return;
+  }
+
+
+  const { error } =
+    await portalSupabase.rpc(
+      'report_broken_link',
+      { p_link_id: x.id }
+    );
+
+
+  if (error) {
+
+    toast(
+      'Não foi possível reportar (a função pode ainda não estar configurada no banco).'
+    );
+
+    console.error(error);
+
+    return;
+
+  }
+
+
+  x.reported_broken_at =
+    new Date().toISOString();
+
+
+  toast('Obrigado! Reportado para a equipe de TI.');
 
   render();
 
@@ -1264,6 +1357,9 @@ async function loadDb() {
       await portalSupabase.auth.getUser();
 
 
+    S.user = user || null;
+
+
     if (user) {
 
       const {
@@ -1285,6 +1381,28 @@ async function loadDb() {
               String(v.link_id)
           )
         );
+
+
+      try {
+
+        const { data: r } =
+          await portalSupabase
+            .from('recent_access')
+            .select('link_id')
+            .eq('user_id', user.id)
+            .order('accessed_at', { ascending: false })
+            .limit(8);
+
+        if (r && r.length) {
+          S.recent = r.map(v => String(v.link_id));
+        }
+
+      } catch (err) {
+
+        // Tabela recent_access pode ainda não existir (Fase 2 não aplicada) — ignora e mantém o histórico local.
+        console.warn('recent_access indisponível, mantendo histórico local.', err);
+
+      }
 
     }
 
@@ -1405,6 +1523,35 @@ function loadLocal() {
 document.addEventListener(
   'click',
   e => {
+
+    const r =
+      e.target.closest(
+        '[data-r]'
+      );
+
+
+    if (r) {
+
+      e.stopPropagation();
+
+
+      const x =
+        S.data.links.find(
+          v =>
+            String(v.id) ===
+            String(r.dataset.r)
+        );
+
+
+      if (x) {
+        reportBroken(x);
+      }
+
+
+      return;
+
+    }
+
 
     const f =
       e.target.closest(

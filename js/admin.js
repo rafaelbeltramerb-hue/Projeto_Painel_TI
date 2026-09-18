@@ -874,6 +874,12 @@ function renderLinks() {
               }
             </span>
 
+            ${
+              x.reported_broken_at
+                ? '<span class="badge danger" title="Reportado como quebrado por um usuário">⚠ Reportado</span>'
+                : ''
+            }
+
           </td>
 
 
@@ -883,6 +889,22 @@ function renderLinks() {
               white-space:nowrap;
             "
           >
+
+            ${
+              x.reported_broken_at
+                ? `
+                  <button
+                    class="icon-btn"
+                    data-resolve="${esc(x.id)}"
+                    title="Marcar como resolvido"
+                    aria-label="Marcar como resolvido"
+                    type="button"
+                  >
+                    ✓
+                  </button>
+                `
+                : ''
+            }
 
             <button
               class="icon-btn"
@@ -1694,6 +1716,68 @@ $('#categoryForm')?.addEventListener(
 document.addEventListener(
   'click',
   async e => {
+
+    /* --------------------------------------------------------
+       MARCAR ALERTA DE LINK QUEBRADO COMO RESOLVIDO
+       -------------------------------------------------------- */
+
+    const resolve =
+      e.target.closest(
+        '[data-resolve]'
+      );
+
+
+    if (resolve) {
+
+      const id =
+        resolve.dataset.resolve;
+
+
+      if (localMode()) {
+
+        const item =
+          A.links.find(
+            x => String(x.id) === String(id)
+          );
+
+        if (item) {
+          item.reported_broken_at = null;
+          item.reported_broken_by = null;
+        }
+
+        localStorage.setItem(
+          'pti_local_links',
+          JSON.stringify(A.links)
+        );
+
+        refreshLocal();
+
+      } else {
+
+        const { error } =
+          await portalSupabase
+            .from('links')
+            .update({
+              reported_broken_at: null,
+              reported_broken_by: null
+            })
+            .eq('id', id);
+
+        if (error) {
+          toast(error.message);
+          return;
+        }
+
+        await loadAdmin();
+
+      }
+
+      toast('Alerta marcado como resolvido.');
+
+      return;
+
+    }
+
 
     /* --------------------------------------------------------
        EDITAR ATALHO

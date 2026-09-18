@@ -20,7 +20,10 @@ Os destinos dos atalhos são preservados. O portal aceita `file://`, UNC, caminh
 2. `supabase-admin-policies-fix.sql` — corrige uma lacuna do schema original: não existiam políticas de INSERT/UPDATE/DELETE para `categories`/`links`, então a administração só gravava em "Modo Local". Seguro rodar mesmo se o schema já estiver em produção.
 3. `supabase-content-schema.sql` — cria `site_content` e `site_cards` (usados pela aba "Conteúdo do Site" do admin) e o bucket de imagens `site-images`.
 4. `supabase-fase1-seguranca.sql` — Fase 1 do roteiro: consulta para localizar os `id` dos usuários e cadastrá-los como admin, restringe a categoria **SENHAS** a usuários autenticados (antes era pública), e traz um script opcional (com preview) para padronizar o formato de URL dos atalhos.
-5. `supabase-migration-links.sql` — opcional, migra/atualiza os 30 atalhos originais da planilha.
+5. `supabase-fase2-melhorias.sql` — Fase 2: cria `recent_access` (histórico de "Recentes" sincronizado por conta) e a função `report_broken_link()` (permite qualquer pessoa logada reportar um atalho com problema, sem precisar de permissão de admin).
+6. `supabase-migration-links.sql` — opcional, migra/atualiza os 30 atalhos originais da planilha.
+
+> Se você já rodou o `supabase-content-schema.sql` antes (na versão sem a tabela `quick_links`), rode-o de novo — agora é seguro (idempotente) e vai só adicionar o que faltava.
 
 Configure `js/supabase-config.js` com a Project URL e a chave pública (anon).
 
@@ -34,3 +37,10 @@ Sem isso, o login funciona mas as gravações são bloqueadas pelo RLS (comporta
 
 ## Modo Local
 Se `js/supabase-config.js` não estiver configurado, o admin opera em "Modo Local": tudo é salvo no `localStorage` do navegador, útil para testar antes de configurar o Supabase.
+
+## Fase 2 — o que mudou
+- **Menu lateral do dashboard** agora é editável em `admin.html` → aba "Menu Lateral (Painel)" (tabela `quick_links`). Sem Supabase configurado, mantém os 3 itens padrão do HTML.
+- **Tema claro/escuro** consistente em todas as páginas (`index.html`, `dashboard.html`, `login.html`, `index_antigo.html`, `admin.html`), com a mesma preferência salva (`localStorage: pti_theme`).
+- **Favoritos** funcionam mesmo sem login (ficam só no navegador) e sincronizam entre dispositivos quando a pessoa está autenticada.
+- **Recentes** também sincronizam por conta quando logado (tabela `recent_access`), com fallback local.
+- **Reportar link quebrado**: qualquer pessoa logada pode marcar um atalho com o ícone ⚑ no card. Isso aparece como aviso (⚠ Reportado) na lista de atalhos do `admin.html`, com um botão para marcar como resolvido.

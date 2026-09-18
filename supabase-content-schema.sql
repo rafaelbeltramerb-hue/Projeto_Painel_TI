@@ -34,6 +34,27 @@ create table if not exists public.site_cards (
   updated_at timestamptz default now()
 );
 
+-- Remove duplicatas que podem ter sido inseridas em execuções
+-- anteriores deste script (antes de existir a constraint única
+-- abaixo). Mantém apenas uma linha por (section, title).
+delete from public.site_cards a
+using public.site_cards b
+where a.section = b.section
+  and a.title = b.title
+  and a.id > b.id;
+
+-- Sem isso, "on conflict do nothing" nos inserts abaixo não teria
+-- nenhuma constraint para comparar e cada nova execução do script
+-- duplicaria as linhas.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'site_cards_section_title_key'
+  ) then
+    alter table public.site_cards add constraint site_cards_section_title_key unique (section, title);
+  end if;
+end $$;
+
 -- Linhas iniciais = o texto/cartões que já existem hoje na página estática,
 -- para que a migração não "apague" nada visualmente assim que for ativada.
 insert into public.site_content (slug, title, body) values
@@ -50,10 +71,58 @@ insert into public.site_cards (section, title, description, sort_order) values
   ('wifi_steps', 'Conecte-se à rede', 'Selecione a rede eduroam nas configurações de Wi-Fi do seu dispositivo.', 1),
   ('wifi_steps', 'Insira as Credenciais', 'Usuário: seu_cpf@instituicao.edu.br — Senha: sua senha institucional.', 2),
   ('wifi_steps', 'Certificado', 'No Android/iOS, marque "Não validar certificado" ou selecione o certificado do sistema se solicitado.', 3)
-on conflict do nothing;
+on conflict (section, title) do nothing;
 
 -- ------------------------------------------------------------
--- Storage: bucket público para imagens de conteúdo do site
+-- quick_links: atalhos externos exibidos na sidebar do dashboard
+-- (ex.: Reservas Agenda, Monitoramento Rede). Diferente de
+-- site_cards porque tem "url" e um ícone pré-definido, sem imagem.
+-- ------------------------------------------------------------
+create table if not exists public.quick_links (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  url text not null,
+  icon_key text not null default 'link',
+  sort_order int not null default 0,
+  active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+delete from public.quick_links a
+using public.quick_links b
+where a.title = b.title
+  and a.id > b.id;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'quick_links_title_key'
+  ) then
+    alter table public.quick_links add constraint quick_links_title_key unique (title);
+  end if;
+end $$;
+
+insert into public.quick_links (title, url, icon_key, sort_order) values
+  ('Reservas Agenda', 'https://rafaelbeltramerb-hue.github.io/Projeto_Reserva_Agenda/', 'calendar', 1),
+  ('Monitoramento Rede', 'https://172.18.0.13/', 'network', 2),
+  ('Suporte WhatsApp', 'https://wa.me/554934417020', 'whatsapp', 3)
+on conflict (title) do nothing;
+
+alter table public.quick_links enable row level security;
+
+drop policy if exists "public read active quick_links" on public.quick_links;
+create policy "public read active quick_links" on public.quick_links
+  for select using (active = true);
+
+drop policy if exists "admins manage quick_links" on public.quick_links;
+create policy "admins manage quick_links" on public.quick_links
+  for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ------------------------------------------------------------
+-- site-images: bucket público para imagens de conteúdo do site
 -- (locais, passos do wi-fi, imagem da seção história, etc.)
 -- ------------------------------------------------------------
 insert into storage.buckets (id, name, public)

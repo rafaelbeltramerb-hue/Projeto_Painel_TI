@@ -796,6 +796,59 @@ button {
 
 
 /* ============================================================
+   REPORTAR LINK QUEBRADO
+   ============================================================ */
+
+.ct-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.report-btn {
+  width: 27px;
+  height: 27px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #a8b0bd;
+
+  border-radius: 7px;
+
+  font-size: 14px;
+
+  transition: .18s ease;
+}
+
+.report-btn:hover {
+  color: var(--danger);
+  background: rgba(224, 76, 76, .1);
+}
+
+.report-btn.on {
+  color: var(--danger);
+}
+
+.card-broken {
+  border-color: rgba(224, 76, 76, .35) !important;
+}
+
+.broken-badge {
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: -4px;
+}
+
+
+/* ============================================================
    NOME DO CARD
    ============================================================ */
 
@@ -1686,9 +1739,18 @@ footer {
     var(--bg);
 }
 
+.badge.danger {
+  color: var(--danger);
+  background: #fbeaea;
+}
+
 [data-theme="dark"] .badge.success {
   background:
     #193323;
+}
+
+[data-theme="dark"] .badge.danger {
+  background: #3a1f1f;
 }
 
 
