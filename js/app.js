@@ -29,75 +29,57 @@ const esc = x =>
 
 
 /* ============================================================
-   CORES DOS ÍCONES (estilo "ícone de app" — iOS)
-   ============================================================ */
+   ÍCONES DOS ATALHOS — estilo "ícone de app" (iOS)
 
-const CATEGORY_GRADIENTS = {
-  'Administrativo': ['#5b93ff', '#2f5fe0'],
-  'Rede': ['#33d1c9', '#0ea5b7'],
-  'Manuais': ['#ffb054', '#f2802f'],
-  'Telefonia': ['#5fdb8e', '#22a85e'],
-  'Softwares': ['#b18cff', '#7c5cf0'],
-  'Termos': ['#aab2c0', '#7c8698'],
-  'Reconhecimento de curso': ['#6fa8ff', '#3d63e8'],
-  'Planejamento': ['#ff7fc0', '#e5399e'],
-  'SENHAS': ['#ff8a80', '#e6483f'],
-  'Datashow': ['#ffd469', '#f5a524'],
-  'Contratos OBC': ['#d4a373', '#a9784a'],
-  'default': ['#9aa4b2', '#707c8c']
-};
-
-function getCategoryGradient(name) {
-
-  const key = String(name || '').trim();
-
-  if (CATEGORY_GRADIENTS[key]) {
-    return CATEGORY_GRADIENTS[key];
-  }
-
-  // Categoria criada pelo admin sem cor definida: gera uma cor
-  // estável a partir do nome, para sempre cair na mesma cor.
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  }
-
-  const hue = hash % 360;
-
-  return [
-    `hsl(${hue}, 78%, 68%)`,
-    `hsl(${hue}, 70%, 48%)`
-  ];
-}
-
-function iconStyle(name) {
-
-  const [from, to] =
-    getCategoryGradient(name);
-
-  return (
-    `background: linear-gradient(155deg, ${from}, ${to});`
-  );
-
-}
-
-
-/* ============================================================
-   ÍCONES SVG
+   Cada atalho ganha um ícone e uma cor PRÓPRIOS, escolhidos a
+   partir de palavras-chave no NOME do atalho (não só da
+   categoria) — assim, itens de uma mesma categoria ampla como
+   "Administrativo" não ficam todos com a cara idêntica. Quando
+   nenhuma palavra-chave bate, cai no ícone padrão da categoria;
+   sem categoria reconhecida, cai numa pasta genérica.
    ============================================================ */
 
 const categoryIconMap = new Map();
 
-const ICONS = {
+function stripAccents(s) {
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
 
-  'Manuais': `
+/* Biblioteca de glifos. `var(--ico-shade, currentColor)` é o tom mais escuro do
+   degradê do próprio ícone (injetado inline por iconStyle), usado
+   para dar profundidade/detalhe de dois tons dentro do glifo. */
+const ICON_GLYPHS = {
+
+  calendar: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path fill="currentColor" d="M4 5.2c0-.9.8-1.6 1.7-1.4C7.6 4.1 9.8 4.8 11.3 6v12.8c-1.5-1.1-3.6-1.7-5.5-2-.9-.1-1.8-1-1.8-1.9V5.2Z"/>
-      <path fill="currentColor" d="M20 5.2c0-.9-.8-1.6-1.7-1.4-1.9.3-4.1 1-5.6 2.2v12.8c1.5-1.1 3.6-1.7 5.5-2 .9-.1 1.8-1 1.8-1.9V5.2Z"/>
+      <rect x="4" y="5.5" width="16" height="14.5" rx="3" fill="currentColor"/>
+      <path fill="var(--ico-shade, currentColor)" d="M4 8.5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v1H4v-1Z"/>
+      <rect x="7" y="3.2" width="1.8" height="4.2" rx=".9" fill="currentColor"/>
+      <rect x="15.2" y="3.2" width="1.8" height="4.2" rx=".9" fill="currentColor"/>
     </svg>
   `,
 
-  'Telefonia': `
+  network: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="17" r="1.6" fill="currentColor"/>
+      <path fill="currentColor" d="M8.8 13.7a4.7 4.7 0 0 1 6.4 0 1 1 0 0 1-1.35 1.47 2.7 2.7 0 0 0-3.7 0 1 1 0 1 1-1.35-1.47Z"/>
+      <path fill="var(--ico-shade, currentColor)" d="M5.6 10.3a9.2 9.2 0 0 1 12.8 0 1 1 0 1 1-1.4 1.44 7.2 7.2 0 0 0-10 0 1 1 0 1 1-1.4-1.44Z"/>
+    </svg>
+  `,
+
+  switch: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="6" width="18" height="9" rx="2.2" fill="currentColor"/>
+      <rect x="5.5" y="15" width="2.2" height="3.6" rx=".6" fill="var(--ico-shade, currentColor)"/>
+      <rect x="10.9" y="15" width="2.2" height="3.6" rx=".6" fill="var(--ico-shade, currentColor)"/>
+      <rect x="16.3" y="15" width="2.2" height="3.6" rx=".6" fill="var(--ico-shade, currentColor)"/>
+    </svg>
+  `,
+
+  phone: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path fill="currentColor" d="M7.2 3.8 4.8 5.2c-.9.5-1.3 1.6-.9 2.6
         2.2 5.6 6.7 10.1 12.3 12.3 1 .4 2.1 0 2.6-.9l1.4-2.4
@@ -107,128 +89,274 @@ const ICONS = {
     </svg>
   `,
 
-  'Rede': `
+  shield: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="17" r="1.6" fill="currentColor"/>
-      <path fill="currentColor" d="M8.8 13.7a4.7 4.7 0 0 1 6.4 0 1 1 0 0 1-1.35 1.47
-        2.7 2.7 0 0 0-3.7 0 1 1 0 1 1-1.35-1.47Z"/>
-      <path fill="currentColor" d="M5.6 10.3a9.2 9.2 0 0 1 12.8 0 1 1 0 1 1-1.4 1.44
-        7.2 7.2 0 0 0-10 0 1 1 0 1 1-1.4-1.44Z"/>
+      <path fill="currentColor" d="M12 3 5.2 5.4v5.2c0 4.6 2.9 8.7 6.8 9.9
+        3.9-1.2 6.8-5.3 6.8-9.9V5.4L12 3Z"/>
+      <path stroke="var(--ico-shade, currentColor)" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" d="m8.7 12.3 2.3 2.3 4.3-4.6"/>
     </svg>
   `,
 
-  'Softwares': `
+  key: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="7.2" height="7.2" rx="2" fill="currentColor"/>
-      <rect x="13.3" y="3.5" width="7.2" height="7.2" rx="2" fill="currentColor"/>
-      <rect x="3.5" y="13.3" width="7.2" height="7.2" rx="2" fill="currentColor"/>
-      <rect x="13.3" y="13.3" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+      <circle cx="8" cy="13.5" r="4.3" fill="currentColor"/>
+      <circle cx="8" cy="13.5" r="1.7" fill="var(--ico-shade, currentColor)"/>
+      <path stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+        d="M11 10.5 18.5 3M15.2 6.3l2 2M17.6 3.9l2 2"/>
     </svg>
   `,
 
-  'Administrativo': `
+  server: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3.3" y="7.5" width="17.4" height="12" rx="2.4" fill="currentColor"/>
-      <path
-        d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      />
+      <rect x="4" y="3.5" width="16" height="7.2" rx="1.8" fill="currentColor"/>
+      <rect x="4" y="13.3" width="16" height="7.2" rx="1.8" fill="currentColor"/>
+      <circle cx="7.3" cy="7.1" r="1.1" fill="var(--ico-shade, currentColor)"/>
+      <circle cx="7.3" cy="16.9" r="1.1" fill="var(--ico-shade, currentColor)"/>
     </svg>
   `,
 
-  'Termos': `
+  clipboard: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 3.5v16.8M7.5 20.3h9"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      />
-      <path
-        d="M12 6 5.5 7.8M12 6l6.5 1.8"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path fill="currentColor" d="M5.5 7.8 3 13a2.7 2.7 0 0 0 5 0L5.5 7.8Z"/>
-      <path fill="currentColor" d="M18.5 7.8 16 13a2.7 2.7 0 0 0 5 0l-2.5-5.2Z"/>
+      <path fill="currentColor" d="M6.5 5A1.8 1.8 0 0 1 8.3 3.2h7.4A1.8 1.8 0 0 1 17.5 5v.4h1
+        a1.6 1.6 0 0 1 1.6 1.6v12.2a1.6 1.6 0 0 1-1.6 1.6H5.5
+        a1.6 1.6 0 0 1-1.6-1.6V7a1.6 1.6 0 0 1 1.6-1.6h1V5Z"/>
+      <rect x="8.2" y="2" width="7.6" height="3.6" rx="1.1" fill="var(--ico-shade, currentColor)"/>
+      <path stroke="var(--ico-shade, currentColor)" stroke-width="1.6" stroke-linecap="round"
+        d="M7.5 12.5h9M7.5 15.8h6"/>
     </svg>
   `,
 
-  'Reconhecimento de curso': `
+  battery: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="8" width="16" height="9" rx="2.2" fill="currentColor"/>
+      <rect x="19.5" y="10.5" width="2" height="4" rx="1" fill="currentColor"/>
+      <path fill="var(--ico-shade, currentColor)" d="m12.6 9.6-3.4 4.3h2.1l-.7 3.3 3.6-4.5h-2.1l.5-3.1Z"/>
+    </svg>
+  `,
+
+  scale: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        d="M12 3.5v16.8M7.5 20.3h9"/>
+      <path stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        stroke-linejoin="round" d="M12 6 5.5 7.8M12 6l6.5 1.8"/>
+      <path fill="var(--ico-shade, currentColor)" d="M5.5 7.8 3 13a2.7 2.7 0 0 0 5 0L5.5 7.8Z"/>
+      <path fill="var(--ico-shade, currentColor)" d="M18.5 7.8 16 13a2.7 2.7 0 0 0 5 0l-2.5-5.2Z"/>
+    </svg>
+  `,
+
+  contract: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="M6 3.5h8.5l4.5 4.5V19a1.6 1.6 0 0 1-1.6 1.6H6
+        A1.6 1.6 0 0 1 4.4 19V5.1A1.6 1.6 0 0 1 6 3.5Z"/>
+      <path fill="var(--ico-shade, currentColor)" d="M14.5 3.5v4a1 1 0 0 0 1 1h4v.2L14.5 3.7Z"/>
+      <path stroke="var(--ico-shade, currentColor)" stroke-width="1.6" stroke-linecap="round"
+        d="M7.8 13h8.4M7.8 16h5.5"/>
+    </svg>
+  `,
+
+  book: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="M4 5.2c0-.9.8-1.6 1.7-1.4C7.6 4.1 9.8 4.8 11.3 6v12.8
+        c-1.5-1.1-3.6-1.7-5.5-2-.9-.1-1.8-1-1.8-1.9V5.2Z"/>
+      <path fill="var(--ico-shade, currentColor)" d="M20 5.2c0-.9-.8-1.6-1.7-1.4-1.9.3-4.1 1-5.6 2.2v12.8
+        c1.5-1.1 3.6-1.7 5.5-2 .9-.1 1.8-1 1.8-1.9V5.2Z"/>
+    </svg>
+  `,
+
+  cap: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path fill="currentColor" d="M12 3.3 2 8l10 4.3L20 9v4.3a1 1 0 1 0 2 0V8.6
         a1 1 0 0 0-.6-.9L12 3.3Z"/>
-      <path fill="currentColor" d="M6 10.6v3.6c0 1.7 2.7 3.1 6 3.1s6-1.4 6-3.1v-3.6
+      <path fill="var(--ico-shade, currentColor)" d="M6 10.6v3.6c0 1.7 2.7 3.1 6 3.1s6-1.4 6-3.1v-3.6
         l-6 2.6-6-2.6Z"/>
     </svg>
   `,
 
-  'Planejamento': `
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5.5" width="16" height="14.5" rx="2.4" fill="currentColor"/>
-      <rect x="7" y="3.5" width="1.8" height="4" rx=".9" fill="currentColor"/>
-      <rect x="15.2" y="3.5" width="1.8" height="4" rx=".9" fill="currentColor"/>
-    </svg>
-  `,
-
-  'SENHAS': `
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="9.5" rx="2.4" fill="currentColor"/>
-      <path
-        d="M8 11V8a4 4 0 1 1 8 0v3"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      />
-    </svg>
-  `,
-
-  'Datashow': `
+  projector: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect x="3.5" y="5" width="17" height="11.5" rx="2" fill="currentColor"/>
-      <path
-        d="M9 20.3h6M12 16.5v3.8"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-      />
+      <circle cx="17" cy="10.7" r="2" fill="var(--ico-shade, currentColor)"/>
+      <path stroke="var(--ico-shade, currentColor)" stroke-width="2" stroke-linecap="round"
+        d="M9 20.3h6M12 16.5v3.8"/>
     </svg>
   `,
 
-  'Contratos OBC': `
+  briefcase: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="7" y="3.5" width="12" height="15" rx="1.6" fill="currentColor" opacity=".55"/>
-      <rect x="4.5" y="6.5" width="12" height="15" rx="1.6" fill="currentColor"/>
+      <rect x="3.3" y="7.5" width="17.4" height="12" rx="2.4" fill="currentColor"/>
+      <path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"
+        stroke="var(--ico-shade, currentColor)" stroke-width="2" stroke-linecap="round"/>
+      <rect x="3.3" y="12.4" width="17.4" height="1.6" fill="var(--ico-shade, currentColor)"/>
     </svg>
   `,
 
-  'default': `
+  grid: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+      <rect x="13.3" y="3.5" width="7.2" height="7.2" rx="2" fill="var(--ico-shade, currentColor)"/>
+      <rect x="3.5" y="13.3" width="7.2" height="7.2" rx="2" fill="var(--ico-shade, currentColor)"/>
+      <rect x="13.3" y="13.3" width="7.2" height="7.2" rx="2" fill="currentColor"/>
+    </svg>
+  `,
+
+  gear: `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="M12 3.5 14 5.2 16.6 5.1 17.5 7.5 19.6 9 18.8 11.5 19.6 14
+        17.5 15.5 16.6 17.9 14 17.8 12 19.5 10 17.8 7.4 17.9 6.5 15.5
+        4.4 14 5.2 11.5 4.4 9 6.5 7.5 7.4 5.1 10 5.2 12 3.5Z"/>
+      <circle cx="12" cy="11.5" r="2.6" fill="var(--ico-shade, currentColor)"/>
+    </svg>
+  `,
+
+  folder: `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path fill="currentColor" d="M3.5 7.2a1.7 1.7 0 0 1 1.7-1.7h5.1l1.8 2h6.7
         a1.7 1.7 0 0 1 1.7 1.7v8.1a1.7 1.7 0 0 1-1.7 1.7H5.2
         a1.7 1.7 0 0 1-1.7-1.7V7.2Z"/>
+      <path fill="var(--ico-shade, currentColor)" d="M3.5 7.2a1.7 1.7 0 0 1 1.7-1.7h5.1l1.8 2H5.2
+        a1.7 1.7 0 0 0-1.7 1.7v-2Z"/>
     </svg>
   `
 };
 
+/* Cor (degradê) de cada glifo — pensada para lembrar as cores de
+   apps reais do iOS (Calendário = vermelho, Telefone = verde,
+   Senhas = grafite, etc.), sem repetir tom entre glifos vizinhos. */
+const ICON_COLORS = {
+  calendar: ['#ff6b6b', '#e63946'],
+  network: ['#4fd1c5', '#0e9488'],
+  switch: ['#7c9cff', '#4361ee'],
+  phone: ['#69db8f', '#22a85e'],
+  shield: ['#ff9f6b', '#e8622e'],
+  key: ['#98989d', '#48484a'],
+  server: ['#8a97a8', '#4b5563'],
+  clipboard: ['#b48cff', '#8b5cf6'],
+  battery: ['#ffd166', '#f2a91e'],
+  scale: ['#d4a373', '#a9784a'],
+  contract: ['#6ea8fe', '#3d63e8'],
+  book: ['#f0b86e', '#d98e2f'],
+  cap: ['#ff8fc7', '#e0499e'],
+  projector: ['#9aa4b2', '#64748b'],
+  briefcase: ['#5b93ff', '#2f5fe0'],
+  grid: ['#b18cff', '#7c5cf0'],
+  gear: ['#aab2c0', '#7c8698'],
+  folder: ['#9aa4b2', '#707c8c']
+};
 
+/* Ícone padrão por categoria (usado quando nenhuma palavra-chave
+   do nome do atalho bate com nada mais específico). */
+const CATEGORY_DEFAULT_ICON = {
+  'Administrativo': 'briefcase',
+  'Rede': 'network',
+  'Manuais': 'book',
+  'Telefonia': 'phone',
+  'Softwares': 'grid',
+  'Termos': 'scale',
+  'Reconhecimento de curso': 'cap',
+  'Planejamento': 'calendar',
+  'SENHAS': 'key',
+  'Datashow': 'projector',
+  'Contratos OBC': 'contract'
+};
+
+/* Palavras-chave no NOME do atalho → ícone específico. Avaliadas
+   em ordem; a primeira que bater vence. Cobrem os casos mais
+   comuns da planilha original; itens que não baterem em nada
+   caem no ícone padrão da categoria. */
+const NAME_ICON_RULES = [
+  [/kaspersky|antivirus/, 'shield'],
+  [/\bsenha/, 'key'],
+  [/nobreak|no-break|\bups\b/, 'battery'],
+  [/reserva|agenda/, 'calendar'],
+  [/wi-?fi|eduroam/, 'network'],
+  [/switch|porta poe|topologia|diagrama.*rede/, 'switch'],
+  [/monitorament|rede geral/, 'network'],
+  [/central telefonic|telefonic|ramal|voip/, 'phone'],
+  [/acesso.*servidor|servidores e sistemas/, 'server'],
+  [/levantamento|invent[a\u00e1]rio|equipamento/, 'clipboard'],
+  [/contrato/, 'contract'],
+  [/termo|responsabilidade|emprestimo/, 'contract'],
+  [/manual|procedimento|tutorial/, 'book'],
+  [/curso|reconhecimento|diploma|certifica/, 'cap'],
+  [/datashow|projetor/, 'projector'],
+  [/planejamento|\bplano\b/, 'calendar']
+];
+
+function getIconKey(x) {
+
+  const custom = categoryIconMap.get(x?.category);
+
+  if (custom && String(custom).trim().startsWith('<svg')) {
+    return null; // ícone customizado (bruto) definido pelo admin: usado direto, sem cor calculada
+  }
+
+  const name = stripAccents(x?.name);
+
+  for (const [re, key] of NAME_ICON_RULES) {
+    if (re.test(name)) return key;
+  }
+
+  return CATEGORY_DEFAULT_ICON[x?.category] || 'folder';
+
+}
+
+function getShortcutIcon(x) {
+
+  const custom = categoryIconMap.get(x?.category);
+
+  if (custom && String(custom).trim().startsWith('<svg')) {
+    return custom;
+  }
+
+  const key = getIconKey(x);
+
+  return ICON_GLYPHS[key] || ICON_GLYPHS.folder;
+
+}
+
+/* Ícone de categoria "genérico" usado nos chips de filtro
+   (ali não há um nome de atalho específico para casar). */
 function getCategoryIcon(c) {
 
   const custom = categoryIconMap.get(c);
 
-  if (
-    custom &&
-    String(custom).trim().startsWith('<svg')
-  ) {
+  if (custom && String(custom).trim().startsWith('<svg')) {
     return custom;
   }
 
-  return ICONS[c] || ICONS.default;
+  const key = CATEGORY_DEFAULT_ICON[c] || 'folder';
+
+  return ICON_GLYPHS[key] || ICON_GLYPHS.folder;
+
 }
+
+function iconStyle(x) {
+
+  const key = getIconKey(x);
+
+  if (!key) return ''; // ícone customizado: sem gradiente calculado
+
+  const [from, to] = ICON_COLORS[key] || ICON_COLORS.folder;
+
+  return (
+    `background: linear-gradient(155deg, ${from}, ${to}); --ico-shade: ${to};`
+  );
+
+}
+
+function categoryIconStyle(c) {
+
+  const key = CATEGORY_DEFAULT_ICON[c] || 'folder';
+  const [from, to] = ICON_COLORS[key] || ICON_COLORS.folder;
+
+  return (
+    `background: linear-gradient(155deg, ${from}, ${to}); --ico-shade: ${to};`
+  );
+
+}
+
 
 
 /* ============================================================
@@ -857,10 +985,10 @@ function card(x) {
 
         <span
           class="ico"
-          style="${iconStyle(x.category)}"
+          style="${iconStyle(x)}"
           aria-hidden="true"
         >
-          ${getCategoryIcon(x.category)}
+          ${getShortcutIcon(x)}
         </span>
 
 
@@ -1005,6 +1133,11 @@ function render() {
       a.map(card).join('');
 
   }
+
+
+  $('#favoritesBtn')?.classList.toggle('active', S.mode === 'fav');
+  $('#recentBtn')?.classList.toggle('active', S.mode === 'recent');
+  $('#allBtn')?.classList.toggle('active', S.mode === 'all' && !S.cat);
 
 
   if (empty) {

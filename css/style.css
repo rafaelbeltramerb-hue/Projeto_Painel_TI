@@ -8,48 +8,52 @@
 }
 
 :root {
-  --bg: #f6f8fc;
+  --bg: #f2f2f7;
   --surface: #ffffff;
-  --surface-soft: #fbfcff;
-  --text: #202124;
-  --muted: #6b7280;
-  --border: #e1e5ec;
+  --surface-soft: #f7f7fb;
+  --text: #1c1c1e;
+  --muted: #8a8a8e;
+  --border: #e5e5ea;
 
-  --accent: #3f5bd8;
-  --accent-hover: #304bc0;
-  --accent-soft: #eef2ff;
+  --accent: #007aff;
+  --accent-hover: #0066d6;
+  --accent-soft: #e8f2ff;
 
-  --success: #188038;
-  --danger: #c5221f;
+  --success: #34c759;
+  --danger: #ff3b30;
 
   --shadow:
-    0 4px 16px rgba(32, 42, 68, .055);
+    0 1px 3px rgba(0, 0, 0, .05),
+    0 8px 20px rgba(0, 0, 0, .05);
 
   --shadow-hover:
-    0 9px 25px rgba(32, 42, 68, .10);
+    0 2px 6px rgba(0, 0, 0, .06),
+    0 14px 30px rgba(0, 0, 0, .09);
 }
 
 [data-theme="dark"] {
-  --bg: #10151e;
-  --surface: #171e29;
-  --surface-soft: #1b2430;
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface-soft: #232326;
 
-  --text: #f1f3f4;
-  --muted: #9aa6b6;
-  --border: #2a3444;
+  --text: #f5f5f7;
+  --muted: #98989d;
+  --border: #38383a;
 
-  --accent: #8298ff;
-  --accent-hover: #9badff;
-  --accent-soft: #202a48;
+  --accent: #0a84ff;
+  --accent-hover: #409cff;
+  --accent-soft: #17233a;
 
-  --success: #81c995;
-  --danger: #f28b82;
+  --success: #30d158;
+  --danger: #ff453a;
 
   --shadow:
-    0 7px 22px rgba(0, 0, 0, .20);
+    0 1px 3px rgba(0, 0, 0, .3),
+    0 10px 24px rgba(0, 0, 0, .35);
 
   --shadow-hover:
-    0 10px 30px rgba(0, 0, 0, .30);
+    0 2px 8px rgba(0, 0, 0, .35),
+    0 16px 34px rgba(0, 0, 0, .45);
 }
 
 
@@ -68,11 +72,12 @@ body {
   color: var(--text);
 
   font-family:
+    -apple-system,
+    "SF Pro Text",
+    "SF Pro Display",
     Inter,
-    "Google Sans",
     "Segoe UI",
     system-ui,
-    -apple-system,
     sans-serif;
 
   font-size: 14px;
@@ -136,8 +141,8 @@ button {
   background:
     linear-gradient(
       145deg,
-      #4c69e8,
-      #304bc1
+      #34aaff,
+      #0066d6
     );
 
   color: #fff;
@@ -149,7 +154,7 @@ button {
 
   box-shadow:
     0 4px 12px
-    rgba(63, 91, 216, .20);
+    rgba(0, 122, 255, .20);
 }
 
 .brand b {
@@ -217,11 +222,11 @@ button {
   width: min(390px, 35vw);
 
   border-color:
-    rgba(63, 91, 216, .40);
+    rgba(0, 122, 255, .40);
 
   box-shadow:
     0 0 0 3px
-    rgba(63, 91, 216, .07);
+    rgba(0, 122, 255, .07);
 }
 
 .top-search-icon {
@@ -324,7 +329,7 @@ button {
   color: var(--accent);
 
   border-color:
-    rgba(63, 91, 216, .25);
+    rgba(0, 122, 255, .25);
 
   background:
     var(--accent-soft);
@@ -397,7 +402,7 @@ button {
   border-radius: 50%;
 
   background:
-    rgba(63, 91, 216, .045);
+    rgba(0, 122, 255, .045);
 
   pointer-events: none;
 }
@@ -452,42 +457,49 @@ button {
 
   align-items: center;
 
-  gap: 6px;
+  gap: 2px;
 
   flex-shrink: 0;
+
+  padding: 3px;
+
+  background: var(--bg);
+
+  border-radius: 12px;
 }
 
 .hero-actions button {
-  height: 33px;
+  height: 30px;
 
-  border:
-    1px solid var(--border);
+  border: 0;
 
   background:
-    var(--surface);
+    transparent;
 
   color:
-    var(--text);
+    var(--muted);
 
   border-radius: 9px;
 
   padding:
-    0 10px;
+    0 12px;
 
   font-size: 10px;
-  font-weight: 750;
+  font-weight: 600;
 
   transition: .18s ease;
 }
 
 .hero-actions button:hover {
-  color: var(--accent);
+  color: var(--text);
+}
 
-  background:
-    var(--accent-soft);
+.hero-actions button.active {
+  color: var(--text);
 
-  border-color:
-    rgba(63, 91, 216, .25);
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
 }
 
 
@@ -560,7 +572,7 @@ button {
 }
 
 .chip {
-  min-height: 28px;
+  min-height: 30px;
 
   display: inline-flex;
 
@@ -577,14 +589,14 @@ button {
   color:
     var(--muted);
 
-  border-radius: 8px;
+  border-radius: 999px;
 
   padding:
-    0 8px;
+    0 12px;
 
   font-size: 9px;
 
-  font-weight: 700;
+  font-weight: 600;
 
   transition: .18s ease;
 }
@@ -593,7 +605,7 @@ button {
   color: var(--accent);
 
   border-color:
-    rgba(63, 91, 216, .25);
+    var(--accent);
 
   background:
     var(--accent-soft);
@@ -603,11 +615,7 @@ button {
   color: #fff;
 
   background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      #5972dd
-    );
+    var(--accent);
 
   border-color:
     transparent;
@@ -649,96 +657,96 @@ button {
   grid-template-columns:
     repeat(
       auto-fill,
-      minmax(215px, 1fr)
+      minmax(100px, 1fr)
     );
 
-  gap: 9px;
+  gap: 6px 4px;
 }
 
 
 /* ============================================================
-   CARDS
+   CARDS — estilo "tile" de home screen (iOS)
    ============================================================ */
 
 .card {
   position: relative;
 
-  min-height: 92px;
+  min-height: 108px;
 
-  padding:
-    9px 10px;
+  padding: 10px 6px 9px;
 
   display: flex;
 
   flex-direction: column;
+  align-items: center;
 
-  border:
-    1px solid var(--border);
+  text-align: center;
 
-  border-radius: 11px;
+  border: 1px solid transparent;
 
-  background:
-    linear-gradient(
-      145deg,
-      var(--surface),
-      var(--surface-soft)
-    );
+  border-radius: 18px;
 
-  box-shadow:
-    0 2px 8px
-    rgba(20, 35, 60, .035);
+  background: transparent;
+
+  box-shadow: none;
 
   transition:
-    transform .16s ease,
-    box-shadow .16s ease,
-    border-color .16s ease;
+    transform .14s ease,
+    background .14s ease,
+    box-shadow .14s ease,
+    border-color .14s ease;
 }
 
-.card:hover {
-  transform:
-    translateY(-1px);
+.card:hover,
+.card:focus-within {
+  transform: translateY(-1px);
 
-  border-color:
-    rgba(63, 91, 216, .24);
+  background: var(--surface);
 
-  box-shadow:
-    var(--shadow-hover);
+  border-color: var(--border);
+
+  box-shadow: var(--shadow-hover);
+}
+
+.card:active {
+  transform: scale(.96);
 }
 
 .ct {
   display: flex;
 
   align-items: center;
+  justify-content: center;
 
-  justify-content: space-between;
+  width: 100%;
 }
 
 
 /* ============================================================
-   ÍCONE CARD
+   ÍCONE CARD — squircle no estilo dos ícones de app do iOS
    ============================================================ */
 
 .ico {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
 
   display: grid;
   place-items: center;
 
   flex-shrink: 0;
 
-  border-radius: 12px;
+  /* Aproximação de "squircle" (superellipse) do iOS via clip-path,
+     em vez de um simples border-radius de cantos circulares. */
+  clip-path: path("M0,24 C0,4.8 4.8,0 24,0 C43.2,0 48,4.8 48,24 C48,43.2 43.2,48 24,48 C4.8,48 0,43.2 0,24 Z");
 
   color: #fff;
 
   box-shadow:
-    0 3px 8px rgba(0, 0, 0, .18),
-    inset 0 1px 0 rgba(255, 255, 255, .35),
-    inset 0 -6px 10px rgba(0, 0, 0, .12);
+    0 4px 10px rgba(0, 0, 0, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -7px 12px rgba(0, 0, 0, .14);
 
   position: relative;
-
-  overflow: hidden;
 }
 
 .ico::before {
@@ -747,20 +755,18 @@ button {
   position: absolute;
   inset: 0;
 
-  border-radius: inherit;
-
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, .22),
-    rgba(255, 255, 255, 0) 45%
+    rgba(255, 255, 255, .25),
+    rgba(255, 255, 255, 0) 42%
   );
 
   pointer-events: none;
 }
 
 .ico svg {
-  width: 21px;
-  height: 21px;
+  width: 25px;
+  height: 25px;
 
   display: block;
 
@@ -781,12 +787,34 @@ button {
 
 
 /* ============================================================
-   FAVORITO
+   AÇÕES SOBREPOSTAS (favorito / reportar)
+   Ficam discretas por padrão, como um "badge" no canto do ícone,
+   e ganham destaque no hover/foco — não competem com o ícone.
    ============================================================ */
 
+.ct-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+
+  display: flex;
+  align-items: center;
+  gap: 0;
+
+  opacity: 0;
+
+  transition: opacity .15s ease;
+}
+
+.card:hover .ct-actions,
+.card:focus-within .ct-actions,
+.ct-actions:has(.on) {
+  opacity: 1;
+}
+
 .star {
-  width: 27px;
-  height: 27px;
+  width: 24px;
+  height: 24px;
 
   display: grid;
   place-items: center;
@@ -795,13 +823,15 @@ button {
 
   border: 0;
 
-  background: transparent;
+  background: var(--surface);
 
   color: #a8b0bd;
 
-  border-radius: 7px;
+  border-radius: 999px;
 
-  font-size: 17px;
+  font-size: 14px;
+
+  box-shadow: var(--shadow);
 
   transition: .18s ease;
 }
@@ -809,14 +839,11 @@ button {
 .star:hover {
   color:
     var(--accent);
-
-  background:
-    var(--accent-soft);
 }
 
 .star.on {
   color:
-    #e1a628;
+    #ffb31a;
 }
 
 
@@ -824,15 +851,9 @@ button {
    REPORTAR LINK QUEBRADO
    ============================================================ */
 
-.ct-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
 .report-btn {
-  width: 27px;
-  height: 27px;
+  width: 24px;
+  height: 24px;
 
   display: grid;
   place-items: center;
@@ -841,35 +862,40 @@ button {
 
   border: 0;
 
-  background: transparent;
+  background: var(--surface);
 
   color: #a8b0bd;
 
-  border-radius: 7px;
+  border-radius: 999px;
 
-  font-size: 14px;
+  font-size: 12px;
+
+  box-shadow: var(--shadow);
 
   transition: .18s ease;
 }
 
 .report-btn:hover {
   color: var(--danger);
-  background: rgba(224, 76, 76, .1);
 }
 
 .report-btn.on {
   color: var(--danger);
 }
 
-.card-broken {
-  border-color: rgba(224, 76, 76, .35) !important;
+.card-broken .ico {
+  box-shadow:
+    0 0 0 2.5px var(--danger),
+    0 4px 10px rgba(0, 0, 0, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -7px 12px rgba(0, 0, 0, .14);
 }
 
 .broken-badge {
   color: var(--danger);
-  font-size: 10px;
-  font-weight: 700;
-  margin-top: -4px;
+  font-size: 9px;
+  font-weight: 600;
+  margin: 2px 0 0;
 }
 
 
@@ -879,9 +905,11 @@ button {
 
 .card h3 {
   margin:
-    7px 0 0;
+    8px 0 0;
 
-  font-size: 11.5px;
+  width: 100%;
+
+  font-size: 11px;
 
   line-height: 1.25;
 
@@ -901,36 +929,39 @@ button {
 
 
 /* ============================================================
-   RODAPÉ DO CARD
+   RODAPÉ DO CARD — visível só no hover/foco (desktop);
+   a tile inteira já abre o atalho ao ser clicada/tocada.
    ============================================================ */
 
 .cf {
   display: flex;
 
   align-items: center;
+  justify-content: center;
 
-  justify-content: space-between;
+  gap: 6px;
 
-  gap: 8px;
+  margin-top: 5px;
 
-  margin-top: auto;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
 
-  padding-top: 6px;
+  transition: max-height .16s ease, opacity .12s ease;
+}
+
+.card:hover .cf,
+.card:focus-within .cf {
+  max-height: 30px;
+  opacity: 1;
 }
 
 .cf small {
-  color:
-    var(--muted);
-
-  font-size: 7px;
-
-  font-weight: 850;
-
-  letter-spacing: .045em;
+  display: none;
 }
 
 .open-btn {
-  height: 24px;
+  height: 22px;
 
   display: inline-flex;
 
@@ -942,35 +973,39 @@ button {
 
   border: 0;
 
-  border-radius: 7px;
+  border-radius: 999px;
 
   padding:
-    0 8px;
+    0 10px;
 
   background:
-    linear-gradient(
-      135deg,
-      var(--accent),
-      #5570dd
-    );
+    var(--accent);
 
   color:
     #fff;
 
   font-size: 8.5px;
 
-  font-weight: 800;
+  font-weight: 700;
 
   transition: .16s ease;
 }
 
 .open-btn:hover {
-  transform:
-    translateY(-1px);
+  background: var(--accent-hover);
+}
 
-  box-shadow:
-    0 4px 10px
-    rgba(63, 91, 216, .20);
+/* Dispositivos sem hover (toque): mantém as ações e o rodapé do
+   card sempre visíveis, já que não há como "passar o mouse". */
+@media (hover: none) {
+  .ct-actions {
+    opacity: .85;
+  }
+
+  .cf {
+    max-height: 30px;
+    opacity: 1;
+  }
 }
 
 
@@ -1174,11 +1209,11 @@ footer {
 .modal-box select:focus,
 .admin-toolbar input:focus {
   border-color:
-    rgba(63, 91, 216, .45);
+    rgba(0, 122, 255, .45);
 
   box-shadow:
     0 0 0 3px
-    rgba(63, 91, 216, .07);
+    rgba(0, 122, 255, .07);
 }
 
 
@@ -1237,7 +1272,7 @@ footer {
 
 .secondary:hover {
   border-color:
-    rgba(63, 91, 216, .25);
+    rgba(0, 122, 255, .25);
 
   color:
     var(--accent);
@@ -1300,32 +1335,36 @@ footer {
 .admin-tabs,
 .content-subtabs {
   display: flex;
-  gap: 6px;
+  gap: 2px;
   flex-wrap: wrap;
   margin-bottom: 14px;
+
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 3px;
+  width: fit-content;
 }
 
 .admin-tab {
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 0;
+  background: transparent;
   color: var(--muted);
-  border-radius: 999px;
+  border-radius: 9px;
   padding: 7px 14px;
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
   transition: .15s ease;
 }
 
 .admin-tab:hover {
   color: var(--text);
-  border-color: var(--accent);
 }
 
 .admin-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .content-subtabs {
@@ -1565,19 +1604,19 @@ footer {
 
 .admin-table thead th {
   padding:
-    9px 8px;
+    0 8px 8px;
 
   border-bottom:
-    1px solid var(--border);
+    0;
 
   color:
     var(--muted);
 
   font-size:
-    8px;
+    8.5px;
 
   font-weight:
-    850;
+    600;
 
   text-align:
     left;
@@ -1586,12 +1625,12 @@ footer {
     uppercase;
 
   letter-spacing:
-    .055em;
+    .06em;
 }
 
 .admin-table tbody td {
   padding:
-    10px 8px;
+    11px 8px;
 
   border-bottom:
     1px solid var(--border);
@@ -1618,12 +1657,32 @@ footer {
     var(--surface-soft);
 }
 
+.admin-table tbody tr:first-child td:first-child {
+  border-top-left-radius: 12px;
+}
+
+.admin-table tbody tr:first-child td:last-child {
+  border-top-right-radius: 12px;
+}
+
+.admin-table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+.admin-table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+.admin-table tbody {
+  background: var(--surface-soft);
+}
+
 .admin-table strong {
   font-size:
     10.5px;
 
   font-weight:
-    750;
+    600;
 }
 
 .admin-table small {
@@ -1848,7 +1907,7 @@ footer {
     var(--accent-soft);
 
   border-color:
-    rgba(63, 91, 216, .12);
+    rgba(0, 122, 255, .12);
 
   transform:
     translateY(-1px);
