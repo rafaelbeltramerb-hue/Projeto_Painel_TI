@@ -979,6 +979,7 @@ function card(x) {
     <article
       class="card ${broken ? 'card-broken' : ''}"
       data-o="${esc(x.id)}"
+      title="${esc(x.name)}"
     >
 
       <div class="ct">
