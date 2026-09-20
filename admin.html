@@ -91,7 +91,7 @@
       <div class="brand">
 
         <a
-          href="index_antigo.html"
+          href="index.html"
           class="back"
           title="Voltar ao Portal">
           ←
@@ -242,6 +242,7 @@
           <button type="button" class="admin-tab active" data-tab="atalhos">Atalhos</button>
           <button type="button" class="admin-tab" data-tab="conteudo">Conteúdo do Site</button>
           <button type="button" class="admin-tab" data-tab="menulateral">Menu Lateral (Painel)</button>
+          <button type="button" class="admin-tab" data-tab="avisos">Avisos</button>
         </div>
 
         <div id="tabAtalhos" class="admin-tabpanel">
@@ -508,6 +509,25 @@
         </div>
         <!-- /tabMenuLateral -->
 
+        <!-- =================================================
+             AVISOS DO SITE PÚBLICO
+             ================================================= -->
+
+        <div id="tabAvisos" class="admin-tabpanel" hidden>
+
+          <div class="admin-toolbar">
+            <div>
+              <h2>Avisos no Site Público</h2>
+              <small>Banner exibido no topo do site (e do painel interno) — manutenções, quedas, avisos gerais.</small>
+            </div>
+            <button type="button" id="newAnnouncement" class="secondary">+ Novo aviso</button>
+          </div>
+
+          <div id="announcementsAdminList" class="card-admin-list"></div>
+
+        </div>
+        <!-- /tabAvisos -->
+
       </section>
 
     </main>
@@ -609,6 +629,68 @@
         </div>
 
         <div id="quickLinkMsg" class="form-msg"></div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       MODAL — AVISO
+       ========================================================= -->
+
+  <div id="announcementEditor" class="modal" hidden style="display:none;">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <span id="announcementEditorEyebrow">NOVO AVISO</span>
+          <h2 id="announcementEditorTitle">Cadastrar aviso</h2>
+        </div>
+        <button id="closeAnnouncementEditor" class="close" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="announcementForm">
+        <input id="announcementEditId" type="hidden">
+
+        <label>
+          Título
+          <input id="announcementTitle" required placeholder="Ex.: Manutenção programada">
+        </label>
+
+        <label>
+          Mensagem
+          <textarea id="announcementMessage" rows="3" required placeholder="Texto exibido no banner..."></textarea>
+        </label>
+
+        <label>
+          Nível
+          <select id="announcementLevel">
+            <option value="info">Informativo (azul)</option>
+            <option value="warning">Atenção (amarelo)</option>
+            <option value="critical">Crítico (vermelho)</option>
+          </select>
+        </label>
+
+        <label>
+          Início (opcional)
+          <input id="announcementStarts" type="datetime-local">
+        </label>
+
+        <label>
+          Fim (opcional)
+          <input id="announcementEnds" type="datetime-local">
+        </label>
+
+        <label class="checkbox-inline">
+          <input id="announcementActive" type="checkbox" checked>
+          Ativo
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelAnnouncement" class="secondary">Cancelar</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+
+        <div id="announcementMsg" class="form-msg"></div>
       </form>
     </div>
   </div>
@@ -1052,6 +1134,8 @@
   <script src="js/admin.js"></script>
 
   <script src="js/admin-content.js"></script>
+
+  <script src="js/admin-announcements.js"></script>
 
 </body>
 </html>

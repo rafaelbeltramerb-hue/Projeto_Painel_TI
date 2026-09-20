@@ -136,12 +136,14 @@ $('#adminTabs')?.addEventListener('click', (event) => {
   $('#tabAtalhos').hidden = tab !== 'atalhos';
   $('#tabConteudo').hidden = tab !== 'conteudo';
   $('#tabMenuLateral').hidden = tab !== 'menulateral';
+  $('#tabAvisos').hidden = tab !== 'avisos';
 
   const newLinkBtn = $('#newLink');
   if (newLinkBtn) newLinkBtn.style.display = tab === 'atalhos' ? '' : 'none';
 
   if (tab === 'conteudo') loadSiteContent();
   if (tab === 'menulateral') loadQuickLinks();
+  if (tab === 'avisos') loadAnnouncements();
 });
 
 $('#contentSubtabs')?.addEventListener('click', (event) => {

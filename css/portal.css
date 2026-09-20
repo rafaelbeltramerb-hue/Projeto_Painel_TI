@@ -7,6 +7,8 @@
   --border: #ddd;
   --navbar-bg: #003366;
   --accent: #0066cc;
+  --success: #1f9d55;
+  --danger: #d64545;
   --hero-bg: #1a252f;
   --sidebar-bg: #1a252f;
   --sidebar-header-bg: #111a22;
@@ -22,6 +24,8 @@
   --border: #2b323d;
   --navbar-bg: #0d1520;
   --accent: #3b82f6;
+  --success: #2fbf6a;
+  --danger: #e5605a;
   --hero-bg: #0d1520;
   --sidebar-bg: #0d1520;
   --sidebar-header-bg: #090e15;
@@ -396,4 +400,60 @@ body {
   object-fit: cover;
   border-radius: 4px;
   margin-bottom: .75rem;
+}
+
+/* ============================================================
+   AVISOS (banner no topo)
+   ============================================================ */
+
+.announce-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.announce-bar strong {
+  font-weight: 700;
+}
+
+.announce-icon {
+  flex-shrink: 0;
+  font-size: 15px;
+}
+
+.announce-text {
+  flex: 1;
+}
+
+.announce-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.announce-close:hover {
+  background: rgba(255,255,255,.3);
+}
+
+.announce-info {
+  background: var(--accent);
+}
+
+.announce-warning {
+  background: #b8860b;
+}
+
+.announce-critical {
+  background: var(--danger);
 }
