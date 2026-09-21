@@ -1163,24 +1163,6 @@ function card(x) {
 
       ${broken ? '<p class="broken-badge">⚠ Reportado com problema recentemente</p>' : ''}
 
-      <div class="cf">
-
-        <small>
-          ${type}
-        </small>
-
-
-        <button
-          class="open-btn"
-          data-o="${esc(x.id)}"
-          type="button"
-        >
-          Abrir
-          <span aria-hidden="true">↗</span>
-        </button>
-
-      </div>
-
     </article>
   `;
 
