@@ -646,6 +646,13 @@ function officeProtocolUrl(url) {
     protocol =
       'ms-powerpoint:ofe|u|';
 
+  } else if (
+    /\.(vsdx|vsd|vsdm|vssx|vstx)$/i.test(lower)
+  ) {
+
+    protocol =
+      'ms-visio:ofe|u|';
+
   }
 
 
@@ -842,49 +849,31 @@ function openItem(x) {
     officeProtocolUrl(url);
 
 
-  if (officeUrl) {
-
-    const a =
-      document.createElement('a');
-
-    a.href = officeUrl;
-    a.target = '_self';
-    a.rel = 'noopener';
-
-    a.style.display = 'none';
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    setTimeout(
-      () => a.remove(),
-      1000
-    );
-
-    return;
-
-  }
+  const targetUrl =
+    officeUrl || url;
 
 
-  // PDF, TXT, Visio (.vsdx), pastas, etc. — sem app do Office
-  // correspondente. Navegadores modernos bloqueiam abrir file://
-  // direto quando o site em si não é file:// (por segurança), então
-  // não adianta insistir com window.open aqui: mostramos o caminho
-  // pronto pra colar no Explorador de Arquivos.
-  if (/^file:\/\//i.test(url)) {
+  // Mesma técnica pros dois casos: um link real, clicado de verdade,
+  // na mesma janela. Isso abre tanto os protocolos do Office
+  // (ms-word:/ms-excel:/ms-powerpoint:/ms-visio:) quanto caminhos
+  // file:// diretos (rede/local) — usar window.open() aqui é o que
+  // fazia o navegador bloquear a abertura de PDF/TXT/pastas antes.
+  const a =
+    document.createElement('a');
 
-    showPathFallback(x, url);
+  a.href = targetUrl;
+  a.target = '_self';
+  a.rel = 'noopener';
 
-    return;
+  a.style.display = 'none';
 
-  }
+  document.body.appendChild(a);
 
+  a.click();
 
-  window.open(
-    url,
-    '_blank',
-    'noopener'
+  setTimeout(
+    () => a.remove(),
+    1000
   );
 
 }
