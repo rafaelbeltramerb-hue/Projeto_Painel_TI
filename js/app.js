@@ -504,7 +504,7 @@ function resolveUrl(x) {
   if (/^[A-Za-z]:[\\/]/.test(u)) {
 
     return 'file:///' +
-      u.replace(/\\/g, '/');
+      normalizeUriPath(u.replace(/\\/g, '/'));
 
   }
 
@@ -512,9 +512,11 @@ function resolveUrl(x) {
   if (/^\\\\/.test(u)) {
 
     return 'file://' +
-      u
-        .replace(/^\\\\+/, '')
-        .replace(/\\/g, '/');
+      normalizeUriPath(
+        u
+          .replace(/^\\\\+/, '')
+          .replace(/\\/g, '/')
+      );
 
   }
 
@@ -531,12 +533,12 @@ function resolveUrl(x) {
 
     if (/^[A-Za-z]:/.test(rest)) {
 
-      return 'file:///' + rest;
+      return 'file:///' + normalizeUriPath(rest);
 
     }
 
     return 'file://' +
-      rest.replace(/^\/+/, '');
+      normalizeUriPath(rest.replace(/^\/+/, ''));
 
   }
 
@@ -586,6 +588,27 @@ function resolveUrl(x) {
 /* ============================================================
    OFFICE PROTOCOL
    ============================================================ */
+
+function normalizeUriPath(s) {
+
+  // Alguns caminhos já vieram com %20 (espaço) parcialmente
+  // codificado na origem, misturado com acentos "crus" (ç, ã...).
+  // Decodifica primeiro (volta tudo a texto literal) e codifica de
+  // novo de uma vez só, de forma consistente — evita tanto
+  // caracteres não-ASCII soltos quanto codificação duplicada
+  // (%2520) em cima do que já estava certo.
+  let decoded = s;
+
+  try {
+    decoded = decodeURIComponent(s);
+  } catch (e) {
+    decoded = s;
+  }
+
+  return encodeURI(decoded);
+
+}
+
 
 function officeProtocolUrl(url) {
 
@@ -663,9 +686,11 @@ function officeProtocolUrl(url) {
 
     const fileUrl =
       'file://' +
-      path
-        .replace(/^\\\\+/, '')
-        .replace(/\\/g, '/');
+      normalizeUriPath(
+        path
+          .replace(/^\\\\+/, '')
+          .replace(/\\/g, '/')
+      );
 
     return protocol + fileUrl;
 
@@ -676,7 +701,9 @@ function officeProtocolUrl(url) {
 
     const fileUrl =
       'file:///' +
-      path.replace(/\\/g, '/');
+      normalizeUriPath(
+        path.replace(/\\/g, '/')
+      );
 
     return protocol + fileUrl;
 
@@ -707,11 +734,13 @@ function officeProtocolUrl(url) {
     return (
       protocol +
       'file://' +
-      (
-        root + relative
+      normalizeUriPath(
+        (
+          root + relative
+        )
+          .replace(/^file:\/+/i, '')
+          .replace(/^\/+/, '')
       )
-        .replace(/^file:\/+/i, '')
-        .replace(/^\/+/, '')
     );
 
   }
@@ -838,6 +867,20 @@ function openItem(x) {
   }
 
 
+  // PDF, TXT, Visio (.vsdx), pastas, etc. — sem app do Office
+  // correspondente. Navegadores modernos bloqueiam abrir file://
+  // direto quando o site em si não é file:// (por segurança), então
+  // não adianta insistir com window.open aqui: mostramos o caminho
+  // pronto pra colar no Explorador de Arquivos.
+  if (/^file:\/\//i.test(url)) {
+
+    showPathFallback(x, url);
+
+    return;
+
+  }
+
+
   window.open(
     url,
     '_blank',
@@ -845,6 +888,111 @@ function openItem(x) {
   );
 
 }
+
+
+/* ============================================================
+   ABRIR MANUALMENTE (fallback de caminho)
+   ============================================================ */
+
+function toWindowsPath(fileUrl) {
+
+  let rest =
+    fileUrl.replace(/^file:\/+/i, '');
+
+  let decoded;
+
+  try {
+    decoded = decodeURIComponent(rest);
+  } catch (e) {
+    decoded = rest;
+  }
+
+  if (/^[A-Za-z]:\//.test(decoded)) {
+    return decoded.replace(/\//g, '\\');
+  }
+
+  return '\\\\' + decoded.replace(/\//g, '\\');
+
+}
+
+function showPathFallback(x, url) {
+
+  const modal = $('#pathFallbackModal');
+  const input = $('#pathFallbackInput');
+  const title = $('#pathFallbackTitle');
+  const msg = $('#pathFallbackMsg');
+
+  if (!modal || !input) return;
+
+  if (title) title.textContent = `Abrir "${x.name}" manualmente`;
+
+  input.value = toWindowsPath(url);
+
+  if (msg) {
+    msg.textContent = '';
+    msg.className = 'form-msg';
+  }
+
+  modal.hidden = false;
+  modal.style.display = 'flex';
+
+  input.focus();
+  input.select();
+
+}
+
+$('#closePathFallback')?.addEventListener('click', () => {
+  const modal = $('#pathFallbackModal');
+  if (modal) {
+    modal.hidden = true;
+    modal.style.display = 'none';
+  }
+});
+
+$('#pathFallbackModal')?.addEventListener('click', (event) => {
+  if (event.target.id === 'pathFallbackModal') {
+    event.target.hidden = true;
+    event.target.style.display = 'none';
+  }
+});
+
+$('#copyPathFallback')?.addEventListener('click', async () => {
+
+  const input = $('#pathFallbackInput');
+  const msg = $('#pathFallbackMsg');
+
+  if (!input) return;
+
+  try {
+
+    await navigator.clipboard.writeText(input.value);
+
+    if (msg) {
+      msg.textContent = 'Caminho copiado!';
+      msg.className = 'form-msg success';
+    }
+
+  } catch (e) {
+
+    input.focus();
+    input.select();
+
+    try {
+      document.execCommand('copy');
+      if (msg) {
+        msg.textContent = 'Caminho copiado!';
+        msg.className = 'form-msg success';
+      }
+    } catch (e2) {
+      if (msg) {
+        msg.textContent = 'Não foi possível copiar automaticamente — selecione e use Ctrl+C.';
+        msg.className = 'form-msg warning';
+      }
+    }
+
+  }
+
+});
 
 
 /* ============================================================
