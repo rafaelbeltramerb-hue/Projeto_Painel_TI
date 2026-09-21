@@ -31,21 +31,23 @@
     </div>
 
     <ul class="sidebar-menu">
-      <li>
-        <a href="index_antigo.html" target="content-frame" class="active" data-tip="Painel da TI">
+      <li class="has-sub">
+        <a href="index_antigo.html" target="content-frame" class="active" data-tip="Painel da TI" id="painelTiLink">
           <span class="sidebar-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
           <span class="sidebar-label">Painel da TI</span>
         </a>
-      </li>
-      <li>
-        <a href="admin.html" target="content-frame" data-tip="Administração">
-          <span class="sidebar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5L14 5.2L16.6 5.1L17.5 7.5L19.6 9L18.8 11.5L19.6 14L17.5 15.5L16.6 17.9L14 17.8L12 19.5L10 17.8L7.4 17.9L6.5 15.5L4.4 14L5.2 11.5L4.4 9L6.5 7.5L7.4 5.1L10 5.2L12 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="12" cy="11.5" r="2.4" stroke="currentColor" stroke-width="1.4"/></svg>
-          </span>
-          <span class="sidebar-label">Administração</span>
-        </a>
+        <ul class="sidebar-submenu">
+          <li>
+            <a href="admin.html" target="content-frame" data-tip="Administração" id="adminLink">
+              <span class="sidebar-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5L14 5.2L16.6 5.1L17.5 7.5L19.6 9L18.8 11.5L19.6 14L17.5 15.5L16.6 17.9L14 17.8L12 19.5L10 17.8L7.4 17.9L6.5 15.5L4.4 14L5.2 11.5L4.4 9L6.5 7.5L7.4 5.1L10 5.2L12 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="12" cy="11.5" r="2.4" stroke="currentColor" stroke-width="1.4"/></svg>
+              </span>
+              <span class="sidebar-label">Administração</span>
+            </a>
+          </li>
+        </ul>
       </li>
       <li>
         <a href="https://rafaelbeltramerb-hue.github.io/Projeto_Reserva_Agenda/" target="_blank" data-tip="Reservas Agenda" class="js-default-quicklink">

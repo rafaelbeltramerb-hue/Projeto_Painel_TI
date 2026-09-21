@@ -1183,13 +1183,28 @@ async function loadAdmin() {
     window.portalSupabase
   ) {
 
-    const r =
-      await portalSupabase.auth.getUser();
+    // getSession() lê a sessão salva localmente (rápido, sem rede).
+    // Só cai para getUser() (que revalida com o servidor) se não
+    // achar nada local — evita pedir login de novo por causa de
+    // uma rede lenta/instável, já que quem chegou até aqui pelo
+    // dashboard.html/login.html já autenticou nesta mesma aba.
+    const s =
+      await portalSupabase.auth.getSession();
 
+    if (s.data?.session?.user) {
 
-    A.user =
-      r.data?.user ||
-      null;
+      A.user = s.data.session.user;
+
+    } else {
+
+      const r =
+        await portalSupabase.auth.getUser();
+
+      A.user =
+        r.data?.user ||
+        null;
+
+    }
 
   }
 

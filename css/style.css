@@ -611,6 +611,14 @@ button {
   letter-spacing: -.025em;
 }
 
+.filters-right {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
 .heading em {
   margin-bottom: 2px;
 

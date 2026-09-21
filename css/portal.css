@@ -288,6 +288,33 @@ body {
   background-color: #0066cc;
 }
 
+/* Submenu (ex.: Administração dentro de Painel da TI) */
+.sidebar-submenu {
+  list-style: none;
+}
+
+.sidebar-submenu li a {
+  padding-left: 2.6rem;
+  font-size: .92em;
+  opacity: .88;
+}
+
+.sidebar-submenu .sidebar-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar.collapsed .sidebar-submenu .sidebar-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar.collapsed .sidebar-submenu li a {
+  padding-left: 0;
+  font-size: 1em;
+  opacity: 1;
+}
+
 .sidebar-icon {
   display: flex;
   align-items: center;

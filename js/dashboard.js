@@ -9,6 +9,12 @@ const $ = s => document.querySelector(s);
 (async function guard() {
   if (!window.supabaseReady || !window.portalSupabase) return;
 
+  // getSession() primeiro (rápido, local); só usa getUser() se não
+  // achar nada, pra não expulsar alguém pra login.html por causa de
+  // uma rede lenta.
+  const s = await portalSupabase.auth.getSession();
+  if (s.data?.session?.user) return;
+
   const { data } = await portalSupabase.auth.getUser();
 
   if (!data?.user) {
@@ -138,6 +144,20 @@ async function loadQuickLinks() {
 }
 
 loadQuickLinks();
+
+/* ============================================================
+   SIDEBAR — DESTACAR ITEM ATIVO (Painel da TI / Administração)
+   ============================================================ */
+
+const painelTiLink = $('#painelTiLink');
+const adminLink = $('#adminLink');
+
+[painelTiLink, adminLink].forEach(link => {
+  link?.addEventListener('click', () => {
+    painelTiLink?.classList.toggle('active', link === painelTiLink);
+    adminLink?.classList.toggle('active', link === adminLink);
+  });
+});
 
 /* ============================================================
    SAIR
