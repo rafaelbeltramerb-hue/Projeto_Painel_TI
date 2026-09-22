@@ -610,6 +610,75 @@ function normalizeUriPath(s) {
 }
 
 
+/* ------------------------------------------------------------
+   O protocolo "ofe|u|" do Office (ms-word:/ms-excel:/...) NÃO
+   decodifica acentos codificados em UTF-8 (%C3%A7 continua
+   %C3%A7 em vez de virar "ç") — confirmado na prática, mesmo com
+   a codificação consistente acima. Handlers legados desse tipo
+   costumam esperar Windows-1252/ANSI (1 byte por caractere) em
+   vez de UTF-8 (2+ bytes). Esta função codifica só os acentos
+   latinos comuns em Windows-1252; o resto segue como URI normal.
+   ------------------------------------------------------------ */
+const WIN1252_MAP = {
+  'À': 'C0', 'Á': 'C1', 'Â': 'C2', 'Ã': 'C3', 'Ä': 'C4', 'Å': 'C5',
+  'Ç': 'C7', 'È': 'C8', 'É': 'C9', 'Ê': 'CA', 'Ë': 'CB',
+  'Ì': 'CC', 'Í': 'CD', 'Î': 'CE', 'Ï': 'CF', 'Ñ': 'D1',
+  'Ò': 'D2', 'Ó': 'D3', 'Ô': 'D4', 'Õ': 'D5', 'Ö': 'D6',
+  'Ù': 'D9', 'Ú': 'DA', 'Û': 'DB', 'Ü': 'DC', 'Ý': 'DD',
+  'à': 'E0', 'á': 'E1', 'â': 'E2', 'ã': 'E3', 'ä': 'E4', 'å': 'E5',
+  'ç': 'E7', 'è': 'E8', 'é': 'E9', 'ê': 'EA', 'ë': 'EB',
+  'ì': 'EC', 'í': 'ED', 'î': 'EE', 'ï': 'EF', 'ñ': 'F1',
+  'ò': 'F2', 'ó': 'F3', 'ô': 'F4', 'õ': 'F5', 'ö': 'F6',
+  'ù': 'F9', 'ú': 'FA', 'û': 'FB', 'ü': 'FC', 'ý': 'FD',
+  'º': 'BA', 'ª': 'AA', '§': 'A7', '°': 'B0'
+};
+
+function encodeOfficeMonikerPath(s) {
+
+  // Parte do texto raw (decodifica o que já estiver %-codificado).
+  let decoded = s;
+
+  try {
+    decoded = decodeURIComponent(s);
+  } catch (e) {
+    decoded = s;
+  }
+
+  let out = '';
+
+  for (const ch of decoded) {
+
+    if (WIN1252_MAP[ch]) {
+
+      out += '%' + WIN1252_MAP[ch];
+
+    } else if (ch === ' ') {
+
+      out += '%20';
+
+    } else if (ch.codePointAt(0) < 128) {
+
+      // ASCII normal: mantém caracteres de caminho/URL intactos
+      // (letras, números, / \ : . , - _ etc.) e escapa o resto.
+      out += /[A-Za-z0-9\-_.!~*'()/\\:,;]/.test(ch)
+        ? ch
+        : encodeURIComponent(ch);
+
+    } else {
+
+      // Fora do conjunto Windows-1252 mapeado acima (raro nestes
+      // caminhos): usa UTF-8 como último recurso.
+      out += encodeURIComponent(ch);
+
+    }
+
+  }
+
+  return out;
+
+}
+
+
 function officeProtocolUrl(url) {
 
   let path =
@@ -693,7 +762,7 @@ function officeProtocolUrl(url) {
 
     const fileUrl =
       'file://' +
-      normalizeUriPath(
+      encodeOfficeMonikerPath(
         path
           .replace(/^\\\\+/, '')
           .replace(/\\/g, '/')
@@ -708,7 +777,7 @@ function officeProtocolUrl(url) {
 
     const fileUrl =
       'file:///' +
-      normalizeUriPath(
+      encodeOfficeMonikerPath(
         path.replace(/\\/g, '/')
       );
 
@@ -741,7 +810,7 @@ function officeProtocolUrl(url) {
     return (
       protocol +
       'file://' +
-      normalizeUriPath(
+      encodeOfficeMonikerPath(
         (
           root + relative
         )
@@ -849,39 +918,72 @@ function openItem(x) {
     officeProtocolUrl(url);
 
 
-  const targetUrl =
-    officeUrl || url;
+  if (officeUrl) {
+
+    // Protocolo do Office (ms-word:/ms-excel:/ms-powerpoint:) — um
+    // link real, clicado de verdade, na mesma janela.
+    const a =
+      document.createElement('a');
+
+    a.href = officeUrl;
+    a.target = '_self';
+    a.rel = 'noopener';
+
+    a.style.display = 'none';
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    setTimeout(
+      () => a.remove(),
+      1000
+    );
+
+    return;
+
+  }
 
 
-  // Mesma técnica pros dois casos: um link real, clicado de verdade,
-  // na mesma janela. Isso abre tanto os protocolos do Office
-  // (ms-word:/ms-excel:/ms-powerpoint:/ms-visio:) quanto caminhos
-  // file:// diretos (rede/local) — usar window.open() aqui é o que
-  // fazia o navegador bloquear a abertura de PDF/TXT/pastas antes.
-  const a =
-    document.createElement('a');
-
-  a.href = targetUrl;
-  a.target = '_self';
-  a.rel = 'noopener';
-
-  a.style.display = 'none';
-
-  document.body.appendChild(a);
-
-  a.click();
-
-  setTimeout(
-    () => a.remove(),
-    1000
-  );
+  // PDF, TXT, Visio, pastas, etc. — sem protocolo de app do Office
+  // pra usar. Navegar direto pra file:// é bloqueado pelo próprio
+  // navegador quando o site está em https:// (confirmado: não tem
+  // técnica de JS que contorne isso). Em vez de tentar e falhar em
+  // silêncio, copia o caminho automaticamente e avisa — sem modal,
+  // sem clique extra.
+  copyPathAndNotify(x, url);
 
 }
 
 
 /* ============================================================
-   ABRIR MANUALMENTE (fallback de caminho)
+   COPIAR CAMINHO (fallback pra PDF/TXT/Visio/pastas)
    ============================================================ */
+
+async function copyPathAndNotify(x, url) {
+
+  const winPath =
+    toWindowsPath(url);
+
+  try {
+
+    await navigator.clipboard.writeText(winPath);
+
+    toast(
+      `Caminho de "${x.name}" copiado — cole no Explorador de Arquivos (Ctrl+V).`
+    );
+
+  } catch (e) {
+
+    // Sem permissão de clipboard (raro): mostra o caminho pra
+    // copiar manualmente.
+    toast(
+      `Não deu pra copiar automaticamente. Caminho: ${winPath}`
+    );
+
+  }
+
+}
 
 function toWindowsPath(fileUrl) {
 
@@ -903,85 +1005,6 @@ function toWindowsPath(fileUrl) {
   return '\\\\' + decoded.replace(/\//g, '\\');
 
 }
-
-function showPathFallback(x, url) {
-
-  const modal = $('#pathFallbackModal');
-  const input = $('#pathFallbackInput');
-  const title = $('#pathFallbackTitle');
-  const msg = $('#pathFallbackMsg');
-
-  if (!modal || !input) return;
-
-  if (title) title.textContent = `Abrir "${x.name}" manualmente`;
-
-  input.value = toWindowsPath(url);
-
-  if (msg) {
-    msg.textContent = '';
-    msg.className = 'form-msg';
-  }
-
-  modal.hidden = false;
-  modal.style.display = 'flex';
-
-  input.focus();
-  input.select();
-
-}
-
-$('#closePathFallback')?.addEventListener('click', () => {
-  const modal = $('#pathFallbackModal');
-  if (modal) {
-    modal.hidden = true;
-    modal.style.display = 'none';
-  }
-});
-
-$('#pathFallbackModal')?.addEventListener('click', (event) => {
-  if (event.target.id === 'pathFallbackModal') {
-    event.target.hidden = true;
-    event.target.style.display = 'none';
-  }
-});
-
-$('#copyPathFallback')?.addEventListener('click', async () => {
-
-  const input = $('#pathFallbackInput');
-  const msg = $('#pathFallbackMsg');
-
-  if (!input) return;
-
-  try {
-
-    await navigator.clipboard.writeText(input.value);
-
-    if (msg) {
-      msg.textContent = 'Caminho copiado!';
-      msg.className = 'form-msg success';
-    }
-
-  } catch (e) {
-
-    input.focus();
-    input.select();
-
-    try {
-      document.execCommand('copy');
-      if (msg) {
-        msg.textContent = 'Caminho copiado!';
-        msg.className = 'form-msg success';
-      }
-    } catch (e2) {
-      if (msg) {
-        msg.textContent = 'Não foi possível copiar automaticamente — selecione e use Ctrl+C.';
-        msg.className = 'form-msg warning';
-      }
-    }
-
-  }
-
-});
 
 
 /* ============================================================

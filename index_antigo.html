@@ -365,43 +365,6 @@
 
 
   <!-- ========================================================
-       ABRIR MANUALMENTE (fallback para PDF/TXT/Visio/pastas —
-       o navegador bloqueia abrir esses caminhos direto por
-       segurança, então oferecemos o caminho pronto pra colar
-       no Explorador de Arquivos)
-       ======================================================== -->
-
-  <div id="pathFallbackModal" class="modal" hidden style="display:none;">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div>
-          <span>ABRIR MANUALMENTE</span>
-          <h2 id="pathFallbackTitle">Não foi possível abrir automaticamente</h2>
-        </div>
-        <button id="closePathFallback" class="close" aria-label="Fechar">×</button>
-      </div>
-
-      <p style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px;">
-        O navegador não abre este tipo de arquivo/pasta direto por segurança.
-        Copie o caminho abaixo e cole no Explorador de Arquivos do Windows
-        (tecla <strong>Win + E</strong>, depois <strong>Ctrl + V</strong> na barra de endereço).
-      </p>
-
-      <label>
-        Caminho
-        <input id="pathFallbackInput" type="text" readonly>
-      </label>
-
-      <div class="modal-actions">
-        <button type="button" id="copyPathFallback" class="primary">Copiar caminho</button>
-      </div>
-
-      <div id="pathFallbackMsg" class="form-msg"></div>
-    </div>
-  </div>
-
-
-  <!-- ========================================================
        SCRIPTS
        ======================================================== -->
 
