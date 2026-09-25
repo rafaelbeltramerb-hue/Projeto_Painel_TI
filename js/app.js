@@ -917,11 +917,11 @@ function openItem(x) {
   const officeUrl =
     officeProtocolUrl(url);
 
-
   if (officeUrl) {
 
-    // Protocolo do Office (ms-word:/ms-excel:/ms-powerpoint:) — um
-    // link real, clicado de verdade, na mesma janela.
+    // Mesmo protocolo/técnica usado pelos atalhos que já funcionam
+    // (ex.: Levantamento Equipamentos XXE) — um link real, clicado
+    // de verdade, na mesma janela.
     const a =
       document.createElement('a');
 
@@ -945,13 +945,28 @@ function openItem(x) {
   }
 
 
-  // PDF, TXT, Visio, pastas, etc. — sem protocolo de app do Office
-  // pra usar. Navegar direto pra file:// é bloqueado pelo próprio
-  // navegador quando o site está em https:// (confirmado: não tem
-  // técnica de JS que contorne isso). Em vez de tentar e falhar em
-  // silêncio, copia o caminho automaticamente e avisa — sem modal,
-  // sem clique extra.
-  copyPathAndNotify(x, url);
+  // PDF, TXT, pastas, etc. — sem protocolo de app do Office pra
+  // usar. Se o portal estiver sendo acessado como arquivo local/de
+  // rede (file://), abrir outro file:// não tem o bloqueio que
+  // existe quando o site está em http(s):// — então abre direto,
+  // igual os demais.
+  const a2 =
+    document.createElement('a');
+
+  a2.href = url;
+  a2.target = '_self';
+  a2.rel = 'noopener';
+
+  a2.style.display = 'none';
+
+  document.body.appendChild(a2);
+
+  a2.click();
+
+  setTimeout(
+    () => a2.remove(),
+    1000
+  );
 
 }
 
