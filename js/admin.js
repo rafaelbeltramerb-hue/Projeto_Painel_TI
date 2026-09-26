@@ -86,6 +86,27 @@ const ADMIN_ICONS = {
         stroke-linejoin="round"
       />
     </svg>
+  `,
+
+  bell: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3.5c-4 0-5.5 3-5.5 6.5 0 4-1.5 5-1.5 5.5h14c0-.5-1.5-1.5-1.5-5.5 0-3.5-1.5-6.5-5.5-6.5Z"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M10 18.5a2 2 0 0 0 4 0"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
+    </svg>
   `
 
 };
@@ -612,17 +633,9 @@ function renderCategories() {
   ) {
 
     tbody.innerHTML = `
-      <tr>
-        <td
-          colspan="2"
-          style="
-            text-align:center;
-            padding:1.5rem;
-          "
-        >
-          Nenhuma categoria encontrada.
-        </td>
-      </tr>
+      <div class="ios-list-empty">
+        Nenhuma categoria encontrada.
+      </div>
     `;
 
     return;
@@ -634,45 +647,31 @@ function renderCategories() {
     A.categories.map(
       c => `
 
-        <tr>
+        <div class="ios-row">
 
-          <td>
+          <span class="ios-row-icon" aria-hidden="true">
+            ${ADMIN_ICONS.folder}
+          </span>
 
-            <strong
-              class="admin-category-name"
-            >
+          <div class="ios-row-main">
 
-              <span
-                class="admin-category-icon"
-                aria-hidden="true"
-              >
-                ${ADMIN_ICONS.folder}
-              </span>
-
+            <strong>
               ${esc(c.name)}
-
             </strong>
 
             ${
               c.description
                 ? `
-                  <br>
-                  <small>
-                    ${esc(c.description)}
-                  </small>
+                  <div class="ios-row-meta">
+                    <small>${esc(c.description)}</small>
+                  </div>
                 `
                 : ''
             }
 
-          </td>
+          </div>
 
-
-          <td
-            style="
-              text-align:right;
-              white-space:nowrap;
-            "
-          >
+          <div class="ios-row-actions">
 
             <button
               class="icon-btn"
@@ -695,9 +694,9 @@ function renderCategories() {
               ${ADMIN_ICONS.delete}
             </button>
 
-          </td>
+          </div>
 
-        </tr>
+        </div>
 
       `
     ).join('');
@@ -802,17 +801,9 @@ function renderLinks() {
   ) {
 
     tbody.innerHTML = `
-      <tr>
-        <td
-          colspan="5"
-          style="
-            text-align:center;
-            padding:1.5rem;
-          "
-        >
-          Nenhum atalho encontrado.
-        </td>
-      </tr>
+      <div class="ios-list-empty">
+        Nenhum atalho encontrado.
+      </div>
     `;
 
     return;
@@ -824,71 +815,56 @@ function renderLinks() {
     filtered.map(
       x => `
 
-        <tr>
+        <div class="ios-row">
 
-          <td>
+          <span class="ios-row-icon" aria-hidden="true">
+            ${ADMIN_ICONS.folder}
+          </span>
+
+          <div class="ios-row-main">
+
             <strong>
               ${esc(x.name)}
             </strong>
-          </td>
 
+            <div class="ios-row-meta">
 
-          <td>
+              <span class="badge secondary">
+                ${esc(x.category_name)}
+              </span>
 
-            <span
-              class="badge secondary"
-            >
-              ${esc(x.category_name)}
-            </span>
+              <span class="badge outline">
+                ${esc(
+                  x.link_type ||
+                  'internal'
+                )}
+              </span>
 
-          </td>
+              <span
+                class="badge ${
+                  x.active !== false
+                    ? 'success'
+                    : 'muted'
+                }"
+              >
+                ${
+                  x.active !== false
+                    ? 'Ativo'
+                    : 'Inativo'
+                }
+              </span>
 
-
-          <td>
-
-            <span
-              class="badge outline"
-            >
-              ${esc(
-                x.link_type ||
-                'internal'
-              )}
-            </span>
-
-          </td>
-
-
-          <td>
-
-            <span
-              class="badge ${
-                x.active !== false
-                  ? 'success'
-                  : 'muted'
-              }"
-            >
               ${
-                x.active !== false
-                  ? 'Ativo'
-                  : 'Inativo'
+                x.reported_broken_at
+                  ? '<span class="badge danger" title="Reportado como quebrado por um usuário">⚠ Reportado</span>'
+                  : ''
               }
-            </span>
 
-            ${
-              x.reported_broken_at
-                ? '<span class="badge danger" title="Reportado como quebrado por um usuário">⚠ Reportado</span>'
-                : ''
-            }
+            </div>
 
-          </td>
+          </div>
 
-
-          <td
-            style="
-              text-align:right;
-              white-space:nowrap;
-            "
-          >
+          <div class="ios-row-actions">
 
             ${
               x.reported_broken_at
@@ -927,9 +903,9 @@ function renderLinks() {
               ${ADMIN_ICONS.delete}
             </button>
 
-          </td>
+          </div>
 
-        </tr>
+        </div>
 
       `
     ).join('');
