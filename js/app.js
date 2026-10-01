@@ -485,6 +485,37 @@ function isFav(x) {
    RESOLUÇÃO DE URL
    ============================================================ */
 
+function looksLikeFolder(rawPath) {
+
+  const last =
+    String(rawPath)
+      .split(/[\\/]/)
+      .filter(Boolean)
+      .pop() || '';
+
+  // Sem extensão de arquivo reconhecível no último trecho do
+  // caminho = tratamos como pasta. Alguns navegadores (Chrome/
+  // Edge) só reconhecem um file:// como diretório e mostram a
+  // listagem quando a URL termina com "/" — sem a barra, tentam
+  // abrir aquilo como se fosse um arquivo e falham.
+  return !/\.[A-Za-z0-9]{1,6}$/.test(last);
+
+}
+
+function withFolderSlash(url, rawPath) {
+
+  if (
+    url &&
+    looksLikeFolder(rawPath) &&
+    !url.endsWith('/')
+  ) {
+    return url + '/';
+  }
+
+  return url;
+
+}
+
 function resolveUrl(x) {
 
   let u = String(
@@ -495,6 +526,8 @@ function resolveUrl(x) {
 
   if (!u) return null;
 
+  const rawPath = u;
+
 
   if (/^https?:\/\//i.test(u)) {
     return u;
@@ -503,20 +536,26 @@ function resolveUrl(x) {
 
   if (/^[A-Za-z]:[\\/]/.test(u)) {
 
-    return 'file:///' +
-      normalizeUriPath(u.replace(/\\/g, '/'));
+    return withFolderSlash(
+      'file:///' +
+        normalizeUriPath(u.replace(/\\/g, '/')),
+      rawPath
+    );
 
   }
 
 
   if (/^\\\\/.test(u)) {
 
-    return 'file://' +
-      normalizeUriPath(
-        u
-          .replace(/^\\\\+/, '')
-          .replace(/\\/g, '/')
-      );
+    return withFolderSlash(
+      'file://' +
+        normalizeUriPath(
+          u
+            .replace(/^\\\\+/, '')
+            .replace(/\\/g, '/')
+        ),
+      rawPath
+    );
 
   }
 
@@ -533,12 +572,18 @@ function resolveUrl(x) {
 
     if (/^[A-Za-z]:/.test(rest)) {
 
-      return 'file:///' + normalizeUriPath(rest);
+      return withFolderSlash(
+        'file:///' + normalizeUriPath(rest),
+        rawPath
+      );
 
     }
 
-    return 'file://' +
-      normalizeUriPath(rest.replace(/^\/+/, ''));
+    return withFolderSlash(
+      'file://' +
+        normalizeUriPath(rest.replace(/^\/+/, '')),
+      rawPath
+    );
 
   }
 
@@ -564,18 +609,24 @@ function resolveUrl(x) {
         .replace(/\\/g, '/')
         .replace(/^\.\//, '');
 
+    let built;
+
     try {
 
-      return new URL(
-        cleanRel,
-        root
-      ).href;
+      built =
+        new URL(
+          cleanRel,
+          root
+        ).href;
 
     } catch (e) {
 
-      return root + cleanRel;
+      built =
+        root + cleanRel;
 
     }
+
+    return withFolderSlash(built, rawPath);
 
   }
 
