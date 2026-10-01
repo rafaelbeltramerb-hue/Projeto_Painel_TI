@@ -1521,6 +1521,7 @@ $('#linkForm')?.addEventListener(
 
 
     const {
+      data: savedRows,
       error
     } =
       id
@@ -1529,12 +1530,14 @@ $('#linkForm')?.addEventListener(
             .from('links')
             .update(payload)
             .eq('id', id)
+            .select()
 
         : await portalSupabase
             .from('links')
             .insert([
               payload
-            ]);
+            ])
+            .select();
 
 
     if (error) {
@@ -1542,6 +1545,20 @@ $('#linkForm')?.addEventListener(
       $('#formMsg')
         .textContent =
         error.message;
+
+    } else if (
+      !savedRows ||
+      savedRows.length === 0
+    ) {
+
+      // update()/insert() não retornou erro, mas também não
+      // retornou nenhuma linha — normalmente significa que o RLS
+      // bloqueou a gravação silenciosamente (politica de escrita
+      // não bateu pra este usuário). Sem o .select() acima, o app
+      // mostraria "sucesso" mesmo sem nada ter sido salvo.
+      $('#formMsg')
+        .textContent =
+        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "links" existem.';
 
     } else {
 
@@ -1662,6 +1679,7 @@ $('#categoryForm')?.addEventListener(
 
 
     const {
+      data: savedRows,
       error
     } =
       id
@@ -1670,12 +1688,14 @@ $('#categoryForm')?.addEventListener(
             .from('categories')
             .update(payload)
             .eq('id', id)
+            .select()
 
         : await portalSupabase
             .from('categories')
             .insert([
               payload
-            ]);
+            ])
+            .select();
 
 
     if (error) {
@@ -1683,6 +1703,15 @@ $('#categoryForm')?.addEventListener(
       $('#categoryMsg')
         .textContent =
         error.message;
+
+    } else if (
+      !savedRows ||
+      savedRows.length === 0
+    ) {
+
+      $('#categoryMsg')
+        .textContent =
+        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "categories" existem.';
 
     } else {
 
