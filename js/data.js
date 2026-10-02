@@ -58,7 +58,7 @@ window.portalData = {
 "id": 2,
 "category": "Telefonia",
 "name": "Controle de Linhas ViVo e Aparelhos Celulares",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Manuais/Central Telefonica/Controle linhas da VIVO + Aparelhos.xlsx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Manuais/Central Telefonica/Controle linhas da VIVO_Aparelhos.xlsx",
 "description": "Controle de linhas Vivo e aparelhos celulares."
 },
 {
@@ -79,7 +79,7 @@ window.portalData = {
 "id": 5,
 "category": "Rede",
 "name": "Diagrama - Rede Xanxerê Geral",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Redes/Diagramas/Diagrama_Rede_UNOESC_Xanxerê_Geral.vsdx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Redes/Diagramas/Diagrama_Rede_UNOESC_Xanxere_Geral.vsdx",
 "description": "Diagrama geral da rede de Xanxerê."
 },
 {
@@ -149,28 +149,28 @@ window.portalData = {
 "id": 15,
 "category": "Softwares",
 "name": "Softwares por Laboratórios e Setores",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Softwares e Licenças/Levantamento Softwares por Laboratorio-Setores.xlsx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Softwares e Licencas/Levantamento Softwares por Laboratorio-Setores.xlsx",
 "description": "Levantamento de softwares por laboratório e setor."
 },
 {
 "id": 16,
 "category": "Softwares",
 "name": "Controle Contratos Software",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Softwares e Licenças/Controle De Softwares/Controle CONTRATOS_SOFTWARE Xanxerê.xlsx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/Softwares e Licencas/Controle De Softwares/Controle CONTRATOS_SOFTWARE Xanxere.xlsx",
 "description": "Controle de contratos de software."
 },
 {
 "id": 17,
 "category": "Administrativo",
 "name": "Quantidade de Comoputadores e Impressoras",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/TI-Administrativo/Atualização Micros e Impressoras Xanxerê e Xaxim.xlsx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/TI-Administrativo/Atualizacao Micros e Impressoras Xanxere e Xaxim.xlsx",
 "description": "Quantidade de computadores e impressoras de Xanxerê e Xaxim."
 },
 {
 "id": 18,
 "category": "Administrativo",
 "name": "Checklist PC Adm - Programas e Configurações",
-"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/TI-Administrativo/Checklist instalação micros ADM.docx",
+"url_original": "file://arquivos/ti/G_Xanxere_TI/Documentacao/TI-Administrativo/Checklist instalacao micros ADM.docx",
 "description": "Checklist de instalação, programas e configurações de computadores administrativos."
 },
 {
