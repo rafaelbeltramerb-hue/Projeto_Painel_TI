@@ -160,6 +160,61 @@ function toast(msg) {
    MODO LOCAL
    ============================================================ */
 
+/* ============================================================
+   DIAGNÓSTICO: compara a sessão atual do navegador com o
+   usuário logado, pra detectar token ausente/expirado sem
+   precisar abrir o DevTools.
+   ============================================================ */
+
+async function describeSessionForDiagnostics() {
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await portalSupabase
+        .auth
+        .getSession();
+
+    if (error) {
+      return `[sessão: erro ao consultar — ${error.message}]`;
+    }
+
+    const session =
+      data?.session;
+
+    if (!session) {
+      return '[sessão: nenhuma sessão ativa encontrada no navegador — provável token expirado, faça logout e login de novo]';
+    }
+
+    const expiresAt =
+      session.expires_at
+        ? new Date(session.expires_at * 1000).toLocaleString('pt-BR')
+        : 'desconhecido';
+
+    const expired =
+      session.expires_at &&
+      (session.expires_at * 1000) < Date.now();
+
+    const idMatches =
+      session.user?.id === A.user?.id;
+
+    return (
+      `[sessão: token ${expired ? 'EXPIRADO' : 'válido'} até ${expiresAt}` +
+      `, usuário da sessão ${idMatches ? 'bate' : 'NÃO bate'} com o logado em tela]`
+    );
+
+  } catch (e) {
+
+    return `[sessão: falha ao verificar — ${e.message}]`;
+
+  }
+
+}
+
+
 function localMode() {
 
   return (
@@ -1558,7 +1613,9 @@ $('#linkForm')?.addEventListener(
       // mostraria "sucesso" mesmo sem nada ter sido salvo.
       $('#formMsg')
         .textContent =
-        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "links" existem.';
+        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "links" existem.' +
+        ' ' +
+        (await describeSessionForDiagnostics());
 
     } else {
 
@@ -1711,7 +1768,9 @@ $('#categoryForm')?.addEventListener(
 
       $('#categoryMsg')
         .textContent =
-        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "categories" existem.';
+        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "categories" existem.' +
+        ' ' +
+        (await describeSessionForDiagnostics());
 
     } else {
 
