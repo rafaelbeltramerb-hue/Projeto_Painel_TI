@@ -330,14 +330,8 @@ function renderCardList(section) {
 
   list.innerHTML = items.map((item, idx) => `
     <div class="card-admin-item" data-id="${esc(item.id)}">
-      ${item.image_url
-        ? `<img src="${esc(item.image_url)}" alt="">`
-        : ''
-      }
-      <div class="card-admin-top">
-        ${!item.image_url ? `<span class="card-admin-icon" aria-hidden="true">${ADMIN_ICONS.folder}</span>` : ''}
-        <h4>${section === 'wifi_steps' ? `${idx + 1}. ` : ''}${esc(item.title)}</h4>
-      </div>
+      ${item.image_url ? `<img src="${esc(item.image_url)}" alt="">` : ''}
+      <h4>${section === 'wifi_steps' ? `${idx + 1}. ` : ''}${esc(item.title)}</h4>
       <p>${esc(item.description || '')}</p>
       <div class="card-admin-actions">
         <button class="icon-btn" data-action="up" title="Mover para cima">↑</button>
@@ -579,10 +573,7 @@ function renderQuickLinks() {
 
   list.innerHTML = items.map(item => `
     <div class="card-admin-item" data-id="${esc(item.id)}">
-      <div class="card-admin-top">
-        <span class="card-admin-icon" aria-hidden="true">${ADMIN_ICONS.folder}</span>
-        <h4>${esc(item.title)}</h4>
-      </div>
+      <h4>${esc(item.title)}</h4>
       <p>${esc(item.url)}<br><small>Ícone: ${esc(QL_ICON_LABEL[item.icon_key] || item.icon_key)}</small></p>
       <div class="card-admin-actions">
         <button class="icon-btn" data-action="up" title="Mover para cima">↑</button>

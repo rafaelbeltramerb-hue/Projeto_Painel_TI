@@ -86,27 +86,6 @@ const ADMIN_ICONS = {
         stroke-linejoin="round"
       />
     </svg>
-  `,
-
-  bell: `
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 3.5c-4 0-5.5 3-5.5 6.5 0 4-1.5 5-1.5 5.5h14c0-.5-1.5-1.5-1.5-5.5 0-3.5-1.5-6.5-5.5-6.5Z"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M10 18.5a2 2 0 0 0 4 0"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-      />
-    </svg>
   `
 
 };
@@ -159,61 +138,6 @@ function toast(msg) {
 /* ============================================================
    MODO LOCAL
    ============================================================ */
-
-/* ============================================================
-   DIAGNÓSTICO: compara a sessão atual do navegador com o
-   usuário logado, pra detectar token ausente/expirado sem
-   precisar abrir o DevTools.
-   ============================================================ */
-
-async function describeSessionForDiagnostics() {
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await portalSupabase
-        .auth
-        .getSession();
-
-    if (error) {
-      return `[sessão: erro ao consultar — ${error.message}]`;
-    }
-
-    const session =
-      data?.session;
-
-    if (!session) {
-      return '[sessão: nenhuma sessão ativa encontrada no navegador — provável token expirado, faça logout e login de novo]';
-    }
-
-    const expiresAt =
-      session.expires_at
-        ? new Date(session.expires_at * 1000).toLocaleString('pt-BR')
-        : 'desconhecido';
-
-    const expired =
-      session.expires_at &&
-      (session.expires_at * 1000) < Date.now();
-
-    const idMatches =
-      session.user?.id === A.user?.id;
-
-    return (
-      `[sessão: token ${expired ? 'EXPIRADO' : 'válido'} até ${expiresAt}` +
-      `, usuário da sessão ${idMatches ? 'bate' : 'NÃO bate'} com o logado em tela]`
-    );
-
-  } catch (e) {
-
-    return `[sessão: falha ao verificar — ${e.message}]`;
-
-  }
-
-}
-
 
 function localMode() {
 
@@ -434,6 +358,161 @@ function normalizeLinkUrl(value) {
   // maioria dos atalhos originais, mais fácil de ler/manter e já
   // resolvido corretamente pelo app.js na hora do clique.
   return toRelativeIfInsideRoot(url);
+
+}
+
+/* ============================================================
+   CONSTRUTOR "CAMINHO DA PASTA" + "NOME DO ARQUIVO"
+   -> "ENDEREÇO GERADO"
+   ============================================================ */
+
+// Converte qualquer formato já salvo (relativo à raiz de rede,
+// file://host/..., file:///X:/..., \\host\... ou X:\...) para um
+// caminho no estilo Windows (\\host\... ou X:\...), legível e
+// editável nos campos "Caminho da pasta" / "Nome do arquivo".
+function storedUrlToWindowsPath(value) {
+
+  let v =
+    String(value || '').trim();
+
+  if (!v) return '';
+
+  if (/^https?:\/\//i.test(v)) {
+    return v;
+  }
+
+  const looksAbsolute =
+    /^file:\/\//i.test(v) ||
+    /^\\\\/.test(v) ||
+    /^[A-Za-z]:[\\/]/.test(v);
+
+  if (!looksAbsolute) {
+
+    const root =
+      String(window.PORTAL_CONFIG?.networkRoot || '').trim();
+
+    if (root) {
+
+      const rootNoProto =
+        root
+          .replace(/^file:\/+/i, '')
+          .replace(/\/+$/, '');
+
+      v =
+        rootNoProto +
+        '/' +
+        v.replace(/^\/+/, '');
+
+    }
+
+  }
+
+  if (/^file:\/\//i.test(v)) {
+    v = v.replace(/^file:\/+/i, '');
+  }
+
+  try {
+    v = decodeURIComponent(v);
+  } catch (e) {
+    // mantém como está se não for possível decodificar
+  }
+
+  v = v.replace(/\//g, '\\');
+
+  if (
+    !/^[A-Za-z]:\\/.test(v) &&
+    !/^\\\\/.test(v)
+  ) {
+    v = '\\\\' + v.replace(/^\\+/, '');
+  }
+
+  return v;
+
+}
+
+// Separa um caminho estilo Windows em pasta + nome do arquivo.
+// Só considera "arquivo" o último trecho quando ele termina com
+// uma extensão reconhecível; caso contrário trata tudo como pasta
+// (atalho de pasta, sem arquivo específico).
+function splitWindowsPath(path) {
+
+  const p =
+    String(path || '');
+
+  if (!p) {
+    return { folder: '', file: '' };
+  }
+
+  if (/^https?:\/\//i.test(p)) {
+    return { folder: p, file: '' };
+  }
+
+  const idx =
+    p.lastIndexOf('\\');
+
+  const last =
+    idx >= 0
+      ? p.slice(idx + 1)
+      : p;
+
+  const looksLikeFile =
+    /\.[A-Za-z0-9]{1,6}$/.test(last);
+
+  if (looksLikeFile && idx >= 0) {
+
+    return {
+      folder: p.slice(0, idx),
+      file: last
+    };
+
+  }
+
+  return { folder: p, file: '' };
+
+}
+
+// Junta "Caminho da pasta" + "Nome do arquivo" e recalcula o
+// campo "Endereço gerado" (#linkUrl), aplicando a mesma lógica de
+// normalização usada ao salvar (relativo quando dentro da raiz de
+// rede, file:// quando fora dela, http(s) passa direto).
+function rebuildGeneratedUrl() {
+
+  const folder =
+    $('#linkFolder')?.value.trim() || '';
+
+  const file =
+    $('#linkFileName')?.value.trim() || '';
+
+  const urlField =
+    $('#linkUrl');
+
+  if (!urlField) return;
+
+  if (!folder && !file) {
+    urlField.value = '';
+    return;
+  }
+
+  let combined;
+
+  if (
+    !file ||
+    /^https?:\/\//i.test(folder)
+  ) {
+
+    combined = folder;
+
+  } else {
+
+    combined =
+      folder.replace(/[\\/]+$/, '') +
+      '\\' +
+      file;
+
+  }
+
+  urlField.value =
+    normalizeLinkUrl(combined);
 
 }
 
@@ -688,9 +767,17 @@ function renderCategories() {
   ) {
 
     tbody.innerHTML = `
-      <div class="ios-list-empty">
-        Nenhuma categoria encontrada.
-      </div>
+      <tr>
+        <td
+          colspan="2"
+          style="
+            text-align:center;
+            padding:1.5rem;
+          "
+        >
+          Nenhuma categoria encontrada.
+        </td>
+      </tr>
     `;
 
     return;
@@ -702,31 +789,45 @@ function renderCategories() {
     A.categories.map(
       c => `
 
-        <div class="ios-row">
+        <tr>
 
-          <span class="ios-row-icon" aria-hidden="true">
-            ${ADMIN_ICONS.folder}
-          </span>
+          <td>
 
-          <div class="ios-row-main">
+            <strong
+              class="admin-category-name"
+            >
 
-            <strong>
+              <span
+                class="admin-category-icon"
+                aria-hidden="true"
+              >
+                ${ADMIN_ICONS.folder}
+              </span>
+
               ${esc(c.name)}
+
             </strong>
 
             ${
               c.description
                 ? `
-                  <div class="ios-row-meta">
-                    <small>${esc(c.description)}</small>
-                  </div>
+                  <br>
+                  <small>
+                    ${esc(c.description)}
+                  </small>
                 `
                 : ''
             }
 
-          </div>
+          </td>
 
-          <div class="ios-row-actions">
+
+          <td
+            style="
+              text-align:right;
+              white-space:nowrap;
+            "
+          >
 
             <button
               class="icon-btn"
@@ -749,9 +850,9 @@ function renderCategories() {
               ${ADMIN_ICONS.delete}
             </button>
 
-          </div>
+          </td>
 
-        </div>
+        </tr>
 
       `
     ).join('');
@@ -856,9 +957,17 @@ function renderLinks() {
   ) {
 
     tbody.innerHTML = `
-      <div class="ios-list-empty">
-        Nenhum atalho encontrado.
-      </div>
+      <tr>
+        <td
+          colspan="5"
+          style="
+            text-align:center;
+            padding:1.5rem;
+          "
+        >
+          Nenhum atalho encontrado.
+        </td>
+      </tr>
     `;
 
     return;
@@ -870,56 +979,71 @@ function renderLinks() {
     filtered.map(
       x => `
 
-        <div class="ios-row">
+        <tr>
 
-          <span class="ios-row-icon" aria-hidden="true">
-            ${ADMIN_ICONS.folder}
-          </span>
-
-          <div class="ios-row-main">
-
+          <td>
             <strong>
               ${esc(x.name)}
             </strong>
+          </td>
 
-            <div class="ios-row-meta">
 
-              <span class="badge secondary">
-                ${esc(x.category_name)}
-              </span>
+          <td>
 
-              <span class="badge outline">
-                ${esc(
-                  x.link_type ||
-                  'internal'
-                )}
-              </span>
+            <span
+              class="badge secondary"
+            >
+              ${esc(x.category_name)}
+            </span>
 
-              <span
-                class="badge ${
-                  x.active !== false
-                    ? 'success'
-                    : 'muted'
-                }"
-              >
-                ${
-                  x.active !== false
-                    ? 'Ativo'
-                    : 'Inativo'
-                }
-              </span>
+          </td>
 
+
+          <td>
+
+            <span
+              class="badge outline"
+            >
+              ${esc(
+                x.link_type ||
+                'internal'
+              )}
+            </span>
+
+          </td>
+
+
+          <td>
+
+            <span
+              class="badge ${
+                x.active !== false
+                  ? 'success'
+                  : 'muted'
+              }"
+            >
               ${
-                x.reported_broken_at
-                  ? '<span class="badge danger" title="Reportado como quebrado por um usuário">⚠ Reportado</span>'
-                  : ''
+                x.active !== false
+                  ? 'Ativo'
+                  : 'Inativo'
               }
+            </span>
 
-            </div>
+            ${
+              x.reported_broken_at
+                ? '<span class="badge danger" title="Reportado como quebrado por um usuário">⚠ Reportado</span>'
+                : ''
+            }
 
-          </div>
+          </td>
 
-          <div class="ios-row-actions">
+
+          <td
+            style="
+              text-align:right;
+              white-space:nowrap;
+            "
+          >
 
             ${
               x.reported_broken_at
@@ -958,9 +1082,9 @@ function renderLinks() {
               ${ADMIN_ICONS.delete}
             </button>
 
-          </div>
+          </td>
 
-        </div>
+        </tr>
 
       `
     ).join('');
@@ -1056,10 +1180,57 @@ function openEditor(x = null) {
     x?.description || '';
 
 
-  $('#linkUrl').value =
+  const rawUrl =
     x?.url ||
     x?.url_original ||
     '';
+
+  $('#linkUrl').value =
+    rawUrl;
+
+
+  // Pré-preenche "Caminho da pasta" / "Nome do arquivo" a partir
+  // do valor já salvo, convertendo pro formato Windows pra ficar
+  // legível e editável. Só mexe no #linkUrl de novo se o usuário
+  // realmente alterar esses dois campos (ver rebuildGeneratedUrl).
+  const winPath =
+    storedUrlToWindowsPath(rawUrl);
+
+  const split =
+    splitWindowsPath(winPath);
+
+  if ($('#linkFolder')) {
+    $('#linkFolder').value =
+      split.folder;
+  }
+
+  if ($('#linkFileName')) {
+    $('#linkFileName').value =
+      split.file;
+  }
+
+  const fileInfo =
+    $('#selectedFileInfo');
+
+  if (fileInfo) {
+
+    if (split.file) {
+
+      fileInfo.hidden = false;
+
+      fileInfo.textContent =
+        `Arquivo atual: ${split.file}`;
+
+    } else {
+
+      fileInfo.hidden = true;
+
+      fileInfo.textContent =
+        '';
+
+    }
+
+  }
 
 
   $('#linkType').value =
@@ -1096,6 +1267,15 @@ function closeEditor() {
 
 
   $('#linkForm').reset();
+
+
+  const fileInfo =
+    $('#selectedFileInfo');
+
+  if (fileInfo) {
+    fileInfo.hidden = true;
+    fileInfo.textContent = '';
+  }
 
 
   $('#formMsg').textContent =
@@ -1344,6 +1524,133 @@ $('#cancelEditor')?.addEventListener(
 );
 
 
+/* ============================================================
+   CAMPOS "CAMINHO DA PASTA" / "NOME DO ARQUIVO"
+   ============================================================ */
+
+$('#linkFolder')?.addEventListener(
+  'input',
+  rebuildGeneratedUrl
+);
+
+$('#linkFileName')?.addEventListener(
+  'input',
+  rebuildGeneratedUrl
+);
+
+
+$('#pasteFolder')?.addEventListener(
+  'click',
+  async () => {
+
+    const folderField =
+      $('#linkFolder');
+
+    const hint =
+      $('#folderHint');
+
+    try {
+
+      const text =
+        await navigator.clipboard.readText();
+
+      const clean =
+        text
+          .trim()
+          .replace(/^"+|"+$/g, '');
+
+      if (!clean) {
+
+        if (hint) {
+          hint.textContent =
+            'A área de transferência está vazia. Copie o caminho no Windows Explorer e tente de novo.';
+        }
+
+        return;
+
+      }
+
+      if (folderField) {
+        folderField.value = clean;
+      }
+
+      rebuildGeneratedUrl();
+
+      if (hint) {
+        hint.textContent =
+          'Caminho colado da área de transferência.';
+      }
+
+    } catch (e) {
+
+      if (hint) {
+        hint.textContent =
+          'Não foi possível ler a área de transferência automaticamente (permissão do navegador). Cole manualmente no campo com Ctrl+V.';
+      }
+
+    }
+
+  }
+);
+
+
+$('#selectFile')?.addEventListener(
+  'click',
+  () => {
+    $('#filePicker')?.click();
+  }
+);
+
+
+$('#filePicker')?.addEventListener(
+  'change',
+  e => {
+
+    const file =
+      e.target.files &&
+      e.target.files[0];
+
+    if (!file) return;
+
+
+    const nameField =
+      $('#linkFileName');
+
+    if (nameField) {
+      nameField.value = file.name;
+    }
+
+
+    const info =
+      $('#selectedFileInfo');
+
+    if (info) {
+
+      info.hidden = false;
+
+      info.textContent =
+        `Selecionado: ${file.name}`;
+
+    }
+
+
+    rebuildGeneratedUrl();
+
+
+    const hint =
+      $('#fileHint');
+
+    if (hint) {
+
+      hint.textContent =
+        'O navegador só informa o nome do arquivo, não a pasta onde ele está — confira se o "Caminho da pasta" acima aponta pro lugar certo.';
+
+    }
+
+  }
+);
+
+
 $('#newCategory')?.addEventListener(
   'click',
   () =>
@@ -1576,7 +1883,6 @@ $('#linkForm')?.addEventListener(
 
 
     const {
-      data: savedRows,
       error
     } =
       id
@@ -1585,14 +1891,12 @@ $('#linkForm')?.addEventListener(
             .from('links')
             .update(payload)
             .eq('id', id)
-            .select()
 
         : await portalSupabase
             .from('links')
             .insert([
               payload
-            ])
-            .select();
+            ]);
 
 
     if (error) {
@@ -1600,22 +1904,6 @@ $('#linkForm')?.addEventListener(
       $('#formMsg')
         .textContent =
         error.message;
-
-    } else if (
-      !savedRows ||
-      savedRows.length === 0
-    ) {
-
-      // update()/insert() não retornou erro, mas também não
-      // retornou nenhuma linha — normalmente significa que o RLS
-      // bloqueou a gravação silenciosamente (politica de escrita
-      // não bateu pra este usuário). Sem o .select() acima, o app
-      // mostraria "sucesso" mesmo sem nada ter sido salvo.
-      $('#formMsg')
-        .textContent =
-        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "links" existem.' +
-        ' ' +
-        (await describeSessionForDiagnostics());
 
     } else {
 
@@ -1736,7 +2024,6 @@ $('#categoryForm')?.addEventListener(
 
 
     const {
-      data: savedRows,
       error
     } =
       id
@@ -1745,14 +2032,12 @@ $('#categoryForm')?.addEventListener(
             .from('categories')
             .update(payload)
             .eq('id', id)
-            .select()
 
         : await portalSupabase
             .from('categories')
             .insert([
               payload
-            ])
-            .select();
+            ]);
 
 
     if (error) {
@@ -1760,17 +2045,6 @@ $('#categoryForm')?.addEventListener(
       $('#categoryMsg')
         .textContent =
         error.message;
-
-    } else if (
-      !savedRows ||
-      savedRows.length === 0
-    ) {
-
-      $('#categoryMsg')
-        .textContent =
-        'Nada foi salvo (0 linhas afetadas). Provavelmente bloqueado por permissão (RLS) — confira se seu usuário tem role=\'admin\' em "profiles" e se as políticas de escrita de "categories" existem.' +
-        ' ' +
-        (await describeSessionForDiagnostics());
 
     } else {
 
