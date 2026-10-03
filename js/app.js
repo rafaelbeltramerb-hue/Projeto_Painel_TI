@@ -946,10 +946,25 @@ function openItem(x) {
 
 
   // PDF, TXT, pastas, etc. — sem protocolo de app do Office pra
-  // usar. Se o portal estiver sendo acessado como arquivo local/de
-  // rede (file://), abrir outro file:// não tem o bloqueio que
-  // existe quando o site está em http(s):// — então abre direto,
-  // igual os demais.
+  // usar. Navegar de uma página file:// pra outro file:// funciona
+  // normalmente; mas o portal roda em http(s):// (GitHub Pages),
+  // e navegadores bloqueiam por segurança qualquer navegação de
+  // uma página http(s) pra um link file:// — não tem contorno via
+  // código. Nesse caso, tentamos o protocolo customizado "pti-open:"
+  // (se o computador já tiver instalado, abre sozinho no Explorador/
+  // app padrão) e, de qualquer forma, já copiamos o caminho como
+  // reserva — se o protocolo não estiver instalado, o navegador só
+  // ignora o clique e o usuário cola manualmente (Ctrl+V).
+  if (location.protocol !== 'file:') {
+
+    tryPtiOpenProtocol(url);
+
+    copyPathAndNotify(x, url);
+
+    return;
+
+  }
+
   const a2 =
     document.createElement('a');
 
@@ -972,6 +987,47 @@ function openItem(x) {
 
 
 /* ============================================================
+   PROTOCOLO CUSTOMIZADO "pti-open:" — abre pasta/arquivo direto
+   no Explorador, igual Word/Excel/Visio fazem com os protocolos
+   deles. Só funciona nos computadores onde o protocolo foi
+   instalado (pasta ferramentas/, arquivo .reg) — nos demais, o
+   navegador simplesmente ignora o clique sem dar erro nenhum,
+   e o fallback de copiar caminho (chamado logo em seguida) cobre
+   o caso.
+   ============================================================ */
+
+function tryPtiOpenProtocol(url) {
+
+  try {
+
+    const a =
+      document.createElement('a');
+
+    a.href =
+      'pti-open:' + url;
+
+    a.style.display = 'none';
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    setTimeout(
+      () => a.remove(),
+      1000
+    );
+
+  } catch (e) {
+
+    // Protocolo não registrado/navegador recusou — sem problema,
+    // o fallback de copiar caminho cobre o caso.
+
+  }
+
+}
+
+
+/* ============================================================
    COPIAR CAMINHO (fallback pra PDF/TXT/Visio/pastas)
    ============================================================ */
 
@@ -985,7 +1041,7 @@ async function copyPathAndNotify(x, url) {
     await navigator.clipboard.writeText(winPath);
 
     toast(
-      `Caminho de "${x.name}" copiado — cole no Explorador de Arquivos (Ctrl+V).`
+      `Caminho de "${x.name}" copiado — abra o Explorador (Win+E) e cole (Ctrl+V).`
     );
 
   } catch (e) {

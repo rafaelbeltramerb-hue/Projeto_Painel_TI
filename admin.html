@@ -232,10 +232,22 @@
         </div>
 
         <div class="admin-tabs" id="adminTabs">
-          <button type="button" class="admin-tab active" data-tab="atalhos">Atalhos</button>
-          <button type="button" class="admin-tab" data-tab="conteudo">Conteúdo do Site</button>
-          <button type="button" class="admin-tab" data-tab="menulateral">Menu Lateral (Painel)</button>
-          <button type="button" class="admin-tab" data-tab="avisos">Avisos</button>
+          <button type="button" class="admin-tab active" data-tab="atalhos">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M11 7l1-1a3.5 3.5 0 0 1 5 5l-1 1M13 17l-1 1a3.5 3.5 0 0 1-5-5l1-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Atalhos
+          </button>
+          <button type="button" class="admin-tab" data-tab="conteudo">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 15l4.5-4.5L12 14l3-3 5 5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            Conteúdo do Site
+          </button>
+          <button type="button" class="admin-tab" data-tab="menulateral">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Menu Lateral (Painel)
+          </button>
+          <button type="button" class="admin-tab" data-tab="avisos">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5c-4 0-5.5 3-5.5 6.5 0 4-1.5 5-1.5 5.5h14c0-.5-1.5-1.5-1.5-5.5 0-3.5-1.5-6.5-5.5-6.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 18.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Avisos
+          </button>
         </div>
 
         <div id="tabAtalhos" class="admin-tabpanel">
@@ -248,37 +260,24 @@
 
           <aside class="panel">
 
-            <h2>
-              Categorias
-            </h2>
+            <div class="panel-head">
+              <span class="panel-head-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 7.5h7l1.8 2h8.2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              </span>
+              <h2>
+                Categorias
+              </h2>
+            </div>
 
             <div
               id="categoryAdmin"
-              class="table-responsive">
+              class="table-responsive"
+              style="margin-top:10px;">
 
-              <table class="admin-table">
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-                      Nome
-                    </th>
-
-                    <th style="text-align:right;">
-                      Ações
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody
-                  id="categoryTableBody">
-                </tbody>
-
-              </table>
+              <div
+                id="categoryTableBody"
+                class="ios-list">
+              </div>
 
             </div>
 
@@ -305,9 +304,14 @@
 
               <div>
 
-                <h2>
-                  Atalhos
-                </h2>
+                <div class="panel-head" style="margin-bottom:0;">
+                  <span class="panel-head-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5 14.5 9.5M11 7l1-1a3.5 3.5 0 0 1 5 5l-1 1M13 17l-1 1a3.5 3.5 0 0 1-5-5l1-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                  </span>
+                  <h2>
+                    Atalhos
+                  </h2>
+                </div>
 
                 <small
                   id="adminCount">
@@ -326,43 +330,13 @@
 
             <div
               id="adminList"
-              class="table-responsive">
+              class="table-responsive"
+              style="margin-top:10px;">
 
-              <table class="admin-table">
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-                      Nome
-                    </th>
-
-                    <th>
-                      Categoria
-                    </th>
-
-                    <th>
-                      Tipo
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th style="text-align:right;">
-                      Ações
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody
-                  id="linksTableBody">
-                </tbody>
-
-              </table>
+              <div
+                id="linksTableBody"
+                class="ios-list">
+              </div>
 
             </div>
 
@@ -673,9 +647,12 @@
           <input id="announcementEnds" type="datetime-local">
         </label>
 
-        <label class="checkbox-inline">
-          <input id="announcementActive" type="checkbox" checked>
+        <label class="checkbox-inline ios-switch-row">
           Ativo
+          <span class="ios-switch">
+            <input id="announcementActive" type="checkbox" checked>
+            <span class="ios-switch-track" aria-hidden="true"></span>
+          </span>
         </label>
 
         <div class="modal-actions">
@@ -934,14 +911,17 @@
              ATIVO
              ================================================= -->
 
-        <label class="check">
-
-          <input
-            id="linkActive"
-            type="checkbox"
-            checked>
+        <label class="check ios-switch-row">
 
           Ativo
+
+          <span class="ios-switch">
+            <input
+              id="linkActive"
+              type="checkbox"
+              checked>
+            <span class="ios-switch-track" aria-hidden="true"></span>
+          </span>
 
         </label>
 

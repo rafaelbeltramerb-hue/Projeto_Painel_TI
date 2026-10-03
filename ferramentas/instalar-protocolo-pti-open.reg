@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\pti-open]
+@="URL:Portal TI - Abrir Pasta/Arquivo"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\Software\Classes\pti-open\DefaultIcon]
+@="explorer.exe,1"
+
+[HKEY_CURRENT_USER\Software\Classes\pti-open\shell]
+
+[HKEY_CURRENT_USER\Software\Classes\pti-open\shell\open]
+
+[HKEY_CURRENT_USER\Software\Classes\pti-open\shell\open\command]
+@="wscript.exe \"\\\\arquivos\\ti\\G_Xanxere_TI\\Ferramentas\\pti-open.vbs\" \"%1\""

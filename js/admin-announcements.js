@@ -57,12 +57,14 @@ function renderAnnouncements() {
 
   list.innerHTML = ANNOUNCEMENTS.map(a => `
     <div class="card-admin-item" data-id="${esc(a.id)}">
-      <h4>
-        <span class="badge ${a.level === 'critical' ? 'danger' : a.level === 'warning' ? 'muted' : 'success'}">${esc(LEVEL_LABEL[a.level] || a.level)}</span>
-        ${esc(a.title)}
-        ${a.active ? '' : '<span class="badge muted">Inativo</span>'}
-      </h4>
+      <div class="card-admin-top">
+        <span class="card-admin-icon ${a.level === 'critical' ? 'level-critical' : a.level === 'warning' ? 'level-warning' : ''}" aria-hidden="true">${ADMIN_ICONS.bell}</span>
+        <h4>${esc(a.title)}</h4>
+      </div>
       <p>
+        <span class="badge ${a.level === 'critical' ? 'danger' : a.level === 'warning' ? 'muted' : 'success'}">${esc(LEVEL_LABEL[a.level] || a.level)}</span>
+        ${a.active ? '' : '<span class="badge muted">Inativo</span>'}
+        <br>
         ${esc(a.message)}<br>
         <small>Início: ${fmtDateTimeDisplay(a.starts_at)} · Fim: ${fmtDateTimeDisplay(a.ends_at)}</small>
       </p>

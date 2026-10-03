@@ -1,0 +1,50 @@
+PORTAL TI — abrir pastas e arquivos (PDF/TXT) automaticamente
+================================================================
+
+O QUE É ISSO
+-------------
+O portal roda em https:// (GitHub Pages), e por segurança nenhum
+navegador deixa um site https:// abrir o Explorador do Windows
+sozinho. A solução é o mesmo truque que já usamos pra Word/Excel/
+Visio: um protocolo próprio do Windows, registrado uma vez em
+cada computador.
+
+Depois de instalado, clicar num atalho de pasta/PDF/TXT no portal
+abre o Explorador (ou o arquivo) direto, sem precisar colar nada.
+Sem instalar, o portal continua funcionando do jeito que já estava:
+copia o caminho e pede pra colar manualmente (Ctrl+V) no Explorador.
+
+
+INSTALAÇÃO (feita 1x em cada computador da equipe)
+----------------------------------------------------
+
+1. Copie o arquivo "pti-open.vbs" (está nesta mesma pasta) para:
+
+       \\arquivos\ti\G_Xanxere_TI\Ferramentas\pti-open.vbs
+
+   (Se preferir guardar em outro caminho, tudo bem — só ajuste o
+   caminho dentro do arquivo "instalar-protocolo-pti-open.reg"
+   antes do passo 2, pra apontar pro lugar certo.)
+
+2. Dê dois cliques no arquivo "instalar-protocolo-pti-open.reg"
+   e confirme a pergunta do Windows ("Tem certeza que deseja
+   continuar?" -> Sim). Não precisa de permissão de administrador.
+
+3. Pronto. Volte ao portal e clique em qualquer atalho de pasta
+   ou PDF/TXT.
+
+   Na PRIMEIRA vez, o navegador vai perguntar algo como:
+   "Abrir Portal_TI - Abrir Pasta/Arquivo?" com uma caixinha
+   "Sempre permitir que xxxxx.github.io abra links deste tipo".
+   Marque essa caixinha e clique em Abrir/Permitir — depois disso
+   não pergunta mais, abre direto, igual acontece hoje com os
+   atalhos de Word/Excel/Visio.
+
+
+SE QUISER DESINSTALAR
+-----------------------
+Apague estas chaves do Registro (regedit.exe):
+
+    HKEY_CURRENT_USER\Software\Classes\pti-open
+
+(ou peça pra alguém da TI gerar um .reg de remoção, se preferir.)
