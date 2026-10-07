@@ -128,11 +128,13 @@ async function loadQuickLinks() {
     document.querySelectorAll('.js-default-quicklink').forEach(a => a.closest('li').remove());
 
     data.forEach(item => {
-      const icon = QUICKLINK_ICONS[item.icon_key] || QUICKLINK_ICONS.link;
+      const iconHtml = item.image_url
+        ? `<img src="${esc(item.image_url)}" alt="">`
+        : `<svg viewBox="0 0 24 24" fill="none">${QUICKLINK_ICONS[item.icon_key] || QUICKLINK_ICONS.link}</svg>`;
       const li = document.createElement('li');
       li.innerHTML = `
         <a href="${esc(item.url)}" target="_blank" data-tip="${esc(item.title)}">
-          <span class="sidebar-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none">${icon}</svg></span>
+          <span class="sidebar-icon" aria-hidden="true">${iconHtml}</span>
           <span class="sidebar-label">${esc(item.title)}</span>
         </a>
       `;

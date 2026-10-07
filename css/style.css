@@ -2465,6 +2465,12 @@ footer {
   box-shadow: 0 0 0 3px rgba(0, 122, 255, .25);
 }
 
+.field-hint {
+  margin: -8px 0 0;
+  font-size: .82em;
+  opacity: .7;
+}
+
 .form-msg {
   min-height:
     15px;

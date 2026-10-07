@@ -580,10 +580,10 @@ function renderQuickLinks() {
   list.innerHTML = items.map(item => `
     <div class="card-admin-item" data-id="${esc(item.id)}">
       <div class="card-admin-top">
-        <span class="card-admin-icon" aria-hidden="true">${ADMIN_ICONS.folder}</span>
+        <span class="card-admin-icon" aria-hidden="true">${item.image_url ? `<img src="${esc(item.image_url)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:5px;">` : ADMIN_ICONS.folder}</span>
         <h4>${esc(item.title)}</h4>
       </div>
-      <p>${esc(item.url)}<br><small>Ícone: ${esc(QL_ICON_LABEL[item.icon_key] || item.icon_key)}</small></p>
+      <p>${esc(item.url)}<br><small>${item.image_url ? 'Imagem própria' : 'Ícone: ' + esc(QL_ICON_LABEL[item.icon_key] || item.icon_key)}</small></p>
       <div class="card-admin-actions">
         <button class="icon-btn" data-action="up" title="Mover para cima">↑</button>
         <button class="icon-btn" data-action="down" title="Mover para baixo">↓</button>
@@ -611,6 +611,7 @@ function openQuickLinkEditor(id) {
   $('#quickLinkTitle').value = item?.title || '';
   $('#quickLinkUrl').value = item?.url || '';
   $('#quickLinkIcon').value = item?.icon_key || 'link';
+  $('#quickLinkImageUrl').value = item?.image_url || '';
   $('#quickLinkMsg').textContent = '';
 
   showModal($('#quickLinkEditor'));
@@ -627,6 +628,7 @@ $('#quickLinkForm')?.addEventListener('submit', async (event) => {
   const title = $('#quickLinkTitle').value.trim();
   const url = $('#quickLinkUrl').value.trim();
   const icon_key = $('#quickLinkIcon').value;
+  const image_url = $('#quickLinkImageUrl').value.trim();
   const msg = $('#quickLinkMsg');
 
   if (!title || !url) {
@@ -638,7 +640,7 @@ $('#quickLinkForm')?.addEventListener('submit', async (event) => {
   msg.textContent = 'Salvando...';
 
   const existing = id ? QUICK_LINKS.find(c => String(c.id) === String(id)) : null;
-  const payload = { id, title, url, icon_key, sort_order: existing?.sort_order ?? QUICK_LINKS.length };
+  const payload = { id, title, url, icon_key, image_url: image_url || null, sort_order: existing?.sort_order ?? QUICK_LINKS.length };
 
   const ok = await saveQuickLink(payload);
 
@@ -671,6 +673,7 @@ async function saveQuickLink(payload) {
         .from('quick_links')
         .update({
           title: payload.title, url: payload.url, icon_key: payload.icon_key,
+          image_url: payload.image_url,
           sort_order: payload.sort_order, updated_at: new Date().toISOString()
         })
         .eq('id', payload.id);
@@ -678,6 +681,7 @@ async function saveQuickLink(payload) {
     } else {
       const { error } = await portalSupabase.from('quick_links').insert({
         title: payload.title, url: payload.url, icon_key: payload.icon_key,
+        image_url: payload.image_url,
         sort_order: payload.sort_order, active: true
       });
       if (error) throw error;
