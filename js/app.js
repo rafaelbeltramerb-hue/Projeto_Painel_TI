@@ -1573,7 +1573,8 @@ async function reportBroken(x) {
   if (error) {
 
     toast(
-      'Não foi possível reportar (a função pode ainda não estar configurada no banco).'
+      'Não foi possível reportar (a função pode ainda não estar configurada no banco)' +
+      (error.message ? ': ' + error.message : '.')
     );
 
     console.error(error);
