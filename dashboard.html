@@ -31,13 +31,18 @@
     </div>
 
     <ul class="sidebar-menu">
-      <li class="has-sub">
-        <a href="index_antigo.html" target="content-frame" class="active" data-tip="Painel da TI" id="painelTiLink">
-          <span class="sidebar-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <span class="sidebar-label">Painel da TI</span>
-        </a>
+      <li class="has-sub" id="painelTiGroup">
+        <div class="sidebar-parent">
+          <a href="index_antigo.html" target="content-frame" class="active" data-tip="Painel da TI" id="painelTiLink">
+            <span class="sidebar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5 12 4l8 7.5M6 10v9h5v-5h2v5h5v-9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="sidebar-label">Painel da TI</span>
+          </a>
+          <button type="button" class="submenu-toggle" data-tip="Expandir/recolher" aria-expanded="true" aria-label="Expandir ou recolher submenu">
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
         <ul class="sidebar-submenu">
           <li>
             <a href="admin.html" target="content-frame" data-tip="Administração" id="adminLink">

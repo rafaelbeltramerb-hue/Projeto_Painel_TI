@@ -64,6 +64,46 @@ toggleBtn?.addEventListener('click', () => {
 initSidebar();
 
 /* ============================================================
+   SIDEBAR — SUBMENUS: EXPANDIR / RECOLHER
+   Funciona tanto para o "Painel da TI" (fixo no HTML) quanto para
+   os grupos de links rápidos criados dinamicamente a partir do
+   admin (Menu Lateral). Lembra o estado (aberto/fechado) por
+   navegador via localStorage.
+   ============================================================ */
+
+function setSubmenuOpen(li, open) {
+  const sub = li.querySelector(':scope > .sidebar-submenu');
+  const toggle = li.querySelector(':scope > .sidebar-parent .submenu-toggle, :scope > button.group-toggle');
+  if (!sub) return;
+  sub.classList.toggle('collapsed', !open);
+  li.classList.toggle('open', open);
+  toggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function initSubmenuToggles() {
+  document.querySelectorAll('#sidebar li.has-sub').forEach(li => {
+    if (li.dataset.submenuReady) return;
+    li.dataset.submenuReady = '1';
+
+    const key = 'pti_submenu_' + (li.dataset.group || li.id || li.querySelector('.sidebar-label')?.textContent || 'x');
+    const saved = localStorage.getItem(key);
+    const defaultOpen = li.dataset.defaultOpen !== 'false';
+    const open = saved === null ? defaultOpen : saved === '1';
+    setSubmenuOpen(li, open);
+
+    const trigger = li.querySelector(':scope > .sidebar-parent .submenu-toggle, :scope > button.group-toggle');
+    trigger?.addEventListener('click', (event) => {
+      event.preventDefault();
+      const nowOpen = !li.classList.contains('open');
+      setSubmenuOpen(li, nowOpen);
+      localStorage.setItem(key, nowOpen ? '1' : '0');
+    });
+  });
+}
+
+initSubmenuToggles();
+
+/* ============================================================
    SIDEBAR — REDIMENSIONAR (arrastar)
    ============================================================ */
 
@@ -110,6 +150,18 @@ function esc(x) {
   }[c]));
 }
 
+function quickLinkItemHtml(item) {
+  const iconHtml = item.image_url
+    ? `<img src="${esc(item.image_url)}" alt="">`
+    : `<svg viewBox="0 0 24 24" fill="none">${QUICKLINK_ICONS[item.icon_key] || QUICKLINK_ICONS.link}</svg>`;
+  return `
+    <a href="${esc(item.url)}" target="_blank" data-tip="${esc(item.title)}">
+      <span class="sidebar-icon" aria-hidden="true">${iconHtml}</span>
+      <span class="sidebar-label">${esc(item.title)}</span>
+    </a>
+  `;
+}
+
 async function loadQuickLinks() {
   if (!window.supabaseReady || !window.portalSupabase) return;
 
@@ -127,19 +179,52 @@ async function loadQuickLinks() {
 
     document.querySelectorAll('.js-default-quicklink').forEach(a => a.closest('li').remove());
 
+    // Separa itens com "grupo" definido no admin dos sem grupo
+    // (sem grupo continuam soltos na sidebar, como sempre foram).
+    const flat = [];
+    const groups = new Map();
+
     data.forEach(item => {
-      const iconHtml = item.image_url
-        ? `<img src="${esc(item.image_url)}" alt="">`
-        : `<svg viewBox="0 0 24 24" fill="none">${QUICKLINK_ICONS[item.icon_key] || QUICKLINK_ICONS.link}</svg>`;
+      const groupName = (item.group_name || '').trim();
+      if (groupName) {
+        if (!groups.has(groupName)) groups.set(groupName, []);
+        groups.get(groupName).push(item);
+      } else {
+        flat.push(item);
+      }
+    });
+
+    flat.forEach(item => {
       const li = document.createElement('li');
-      li.innerHTML = `
-        <a href="${esc(item.url)}" target="_blank" data-tip="${esc(item.title)}">
-          <span class="sidebar-icon" aria-hidden="true">${iconHtml}</span>
-          <span class="sidebar-label">${esc(item.title)}</span>
-        </a>
-      `;
+      li.innerHTML = quickLinkItemHtml(item);
       end.parentNode.insertBefore(li, end);
     });
+
+    groups.forEach((items, groupName) => {
+      const li = document.createElement('li');
+      li.className = 'has-sub';
+      li.dataset.group = groupName;
+      li.dataset.defaultOpen = 'false';
+      li.innerHTML = `
+        <button type="button" class="group-toggle" data-tip="${esc(groupName)}" aria-expanded="false" aria-label="Expandir ou recolher ${esc(groupName)}">
+          <span class="sidebar-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16M4 12h16M4 16.5h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          <span class="sidebar-label">${esc(groupName)}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <ul class="sidebar-submenu collapsed"></ul>
+      `;
+      const sub = li.querySelector('.sidebar-submenu');
+      items.forEach(item => {
+        const sli = document.createElement('li');
+        sli.innerHTML = quickLinkItemHtml(item);
+        sub.appendChild(sli);
+      });
+      end.parentNode.insertBefore(li, end);
+    });
+
+    initSubmenuToggles();
   } catch (err) {
     console.warn('Links rápidos dinâmicos indisponíveis, mantendo os padrão.', err);
   }

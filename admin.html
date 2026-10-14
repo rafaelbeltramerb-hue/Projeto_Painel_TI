@@ -596,6 +596,13 @@
         </label>
         <p class="field-hint">Se preenchido, usa essa imagem no lugar do ícone acima (ex.: logo da empresa). Deixe em branco para usar o ícone.</p>
 
+        <label>
+          Grupo / submenu (opcional)
+          <input id="quickLinkGroup" type="text" list="quickLinkGroupSuggestions" placeholder="Ex.: Rede &amp; Infraestrutura">
+          <datalist id="quickLinkGroupSuggestions"></datalist>
+        </label>
+        <p class="field-hint">Links com o mesmo nome de grupo aparecem juntos num submenu que expande/recolhe. Deixe em branco para o link ficar solto na sidebar.</p>
+
         <div class="modal-actions">
           <button type="button" id="cancelQuickLink" class="secondary">Cancelar</button>
           <button type="submit" class="primary">Salvar</button>

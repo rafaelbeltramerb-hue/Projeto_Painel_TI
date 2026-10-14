@@ -564,6 +564,14 @@ async function loadQuickLinks() {
   }
 
   renderQuickLinks();
+  renderQuickLinkGroupSuggestions();
+}
+
+function renderQuickLinkGroupSuggestions() {
+  const list = $('#quickLinkGroupSuggestions');
+  if (!list) return;
+  const groups = [...new Set(QUICK_LINKS.map(i => (i.group_name || '').trim()).filter(Boolean))];
+  list.innerHTML = groups.map(g => `<option value="${esc(g)}"></option>`).join('');
 }
 
 function renderQuickLinks() {
@@ -583,7 +591,7 @@ function renderQuickLinks() {
         <span class="card-admin-icon" aria-hidden="true">${item.image_url ? `<img src="${esc(item.image_url)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:5px;">` : ADMIN_ICONS.folder}</span>
         <h4>${esc(item.title)}</h4>
       </div>
-      <p>${esc(item.url)}<br><small>${item.image_url ? 'Imagem própria' : 'Ícone: ' + esc(QL_ICON_LABEL[item.icon_key] || item.icon_key)}</small></p>
+      <p>${esc(item.url)}<br><small>${item.image_url ? 'Imagem própria' : 'Ícone: ' + esc(QL_ICON_LABEL[item.icon_key] || item.icon_key)}${item.group_name ? ' · Grupo: ' + esc(item.group_name) : ''}</small></p>
       <div class="card-admin-actions">
         <button class="icon-btn" data-action="up" title="Mover para cima">↑</button>
         <button class="icon-btn" data-action="down" title="Mover para baixo">↓</button>
@@ -612,6 +620,7 @@ function openQuickLinkEditor(id) {
   $('#quickLinkUrl').value = item?.url || '';
   $('#quickLinkIcon').value = item?.icon_key || 'link';
   $('#quickLinkImageUrl').value = item?.image_url || '';
+  $('#quickLinkGroup').value = item?.group_name || '';
   $('#quickLinkMsg').textContent = '';
 
   showModal($('#quickLinkEditor'));
