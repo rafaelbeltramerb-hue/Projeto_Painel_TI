@@ -715,7 +715,7 @@ function officeProtocolUrl(url) {
     protocol =
       'ms-powerpoint:ofe|u|';
 
-  } else if (
+  } /*else if (
     /\.(vsdx|vsd|vsdm|vssx|vstx)$/i.test(lower)
   ) {
 
@@ -723,7 +723,7 @@ function officeProtocolUrl(url) {
       'ms-visio:ofe|u|';
 
   }
-
+*/
 
   if (!protocol) {
     return null;
