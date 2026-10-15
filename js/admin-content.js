@@ -638,6 +638,7 @@ $('#quickLinkForm')?.addEventListener('submit', async (event) => {
   const url = $('#quickLinkUrl').value.trim();
   const icon_key = $('#quickLinkIcon').value;
   const image_url = $('#quickLinkImageUrl').value.trim();
+  const group_name = $('#quickLinkGroup').value.trim();
   const msg = $('#quickLinkMsg');
 
   if (!title || !url) {
@@ -649,7 +650,12 @@ $('#quickLinkForm')?.addEventListener('submit', async (event) => {
   msg.textContent = 'Salvando...';
 
   const existing = id ? QUICK_LINKS.find(c => String(c.id) === String(id)) : null;
-  const payload = { id, title, url, icon_key, image_url: image_url || null, sort_order: existing?.sort_order ?? QUICK_LINKS.length };
+  const payload = {
+    id, title, url, icon_key,
+    image_url: image_url || null,
+    group_name: group_name || null,
+    sort_order: existing?.sort_order ?? QUICK_LINKS.length
+  };
 
   const ok = await saveQuickLink(payload);
 
@@ -683,6 +689,7 @@ async function saveQuickLink(payload) {
         .update({
           title: payload.title, url: payload.url, icon_key: payload.icon_key,
           image_url: payload.image_url,
+          group_name: payload.group_name,
           sort_order: payload.sort_order, updated_at: new Date().toISOString()
         })
         .eq('id', payload.id);
@@ -691,6 +698,7 @@ async function saveQuickLink(payload) {
       const { error } = await portalSupabase.from('quick_links').insert({
         title: payload.title, url: payload.url, icon_key: payload.icon_key,
         image_url: payload.image_url,
+        group_name: payload.group_name,
         sort_order: payload.sort_order, active: true
       });
       if (error) throw error;
